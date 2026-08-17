@@ -59,8 +59,7 @@ class GameState:
         }
 
     def cast_vote(self, voter_index: int, target_index: int) -> None:
-        if voter_index == target_index:
-            raise ValueError("Players cannot vote for themselves.")
+        # Self-voting is allowed by the game rules.
         if not (0 <= voter_index < len(self.players) and 0 <= target_index < len(self.players)):
             raise ValueError("Invalid vote.")
         self.votes[voter_index] = target_index
