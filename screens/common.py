@@ -8,6 +8,10 @@ from kivy.graphics import Color, RoundedRectangle, Line
 ROOT_DIR = Path(__file__).resolve().parents[1]
 ASSET_DIR = ROOT_DIR / "assets"
 
+# Android's bundled Noto Sans Devanagari supports Hindi properly.
+SYSTEM_DEVANAGARI_FONT = Path("/system/fonts/NotoSansDevanagari-Regular.ttf")
+DEVANAGARI_FONT = str(SYSTEM_DEVANAGARI_FONT) if SYSTEM_DEVANAGARI_FONT.exists() else ""
+
 COLORS = {
     "bg": (0.035, 0.015, 0.075, 1),
     "card": (0.13, 0.06, 0.22, 0.92),
@@ -28,6 +32,8 @@ class NeonLabel(Label):
         kwargs.setdefault("color", COLORS["text"])
         kwargs.setdefault("halign", "center")
         kwargs.setdefault("valign", "middle")
+        if DEVANAGARI_FONT:
+            kwargs.setdefault("font_name", DEVANAGARI_FONT)
         super().__init__(**kwargs)
         self.bind(size=lambda *_: setattr(self, "text_size", self.size))
 
@@ -40,6 +46,8 @@ class RoundedButton(Button):
         kwargs.setdefault("color", COLORS["text"])
         kwargs.setdefault("bold", True)
         kwargs.setdefault("font_size", "18sp")
+        if DEVANAGARI_FONT:
+            kwargs.setdefault("font_name", DEVANAGARI_FONT)
         self.bg_color = bg_color or COLORS["card2"]
         self.border_color = border_color or COLORS["accent"]
         self.radius = dp(radius)
