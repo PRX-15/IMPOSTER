@@ -44,19 +44,19 @@ class RevealScreen(Screen):
         if info["is_imposter"]:
             self.card.text = (
                 "[size=22sp][b]YOU ARE THE IMPOSTER[/b][/size]\n\n"
-                "[size=15sp]YOUR CATEGORY</size]\n"
+                "[size=15sp]YOUR CATEGORY[/size]\n"
                 f"[size=30sp][b]{info['category']}[/b][/size]\n"
                 f"[size=20sp]{info['category_hi']}[/size]\n\n"
-                "[size=15sp]THE WORD WAS</size]\n"
+                "[size=15sp]THE WORD WAS[/size]\n"
                 "[size=30sp][b]???[/b][/size]\n"
-                "[size=18sp]शब्द पता नहीं है</size]"
+                "[size=18sp]शब्द पता नहीं है[/size]"
             )
         else:
             self.card.text = (
-                "[size=15sp]WORD</size]\n"
+                "[size=15sp]WORD[/size]\n"
                 f"[size=34sp][b]{info['word']}[/b][/size]\n"
                 f"[size=21sp]{info['word_hi']}[/size]\n\n"
-                "[size=15sp]CATEGORY</size]\n"
+                "[size=15sp]CATEGORY[/size]\n"
                 f"[size=30sp][b]{info['category']}[/b][/size]\n"
                 f"[size=20sp]{info['category_hi']}[/size]"
             )
