@@ -14,7 +14,9 @@ MAX_PLAYERS = 5
 @dataclass
 class RoundWord:
     word: str
+    word_hi: str
     category: str
+    category_hi: str
 
 
 @dataclass
@@ -40,7 +42,9 @@ class GameState:
         if self._last_word and len(choices) > 1:
             choices = [entry for entry in choices if entry["word"] != self._last_word]
         entry = random.choice(choices)
-        self.selected_word = RoundWord(entry["word"], entry["category"])
+        self.selected_word = RoundWord(
+            entry["word"], entry["word_hi"], entry["category"], entry["category_hi"]
+        )
         self._last_word = entry["word"]
         self.imposter_index = random.randrange(len(self.players))
         self.current_reveal_index = 0
@@ -55,11 +59,12 @@ class GameState:
             "player": self.players[index],
             "is_imposter": is_imposter,
             "word": "" if is_imposter else self.selected_word.word,
+            "word_hi": "" if is_imposter else self.selected_word.word_hi,
             "category": self.selected_word.category,
+            "category_hi": self.selected_word.category_hi,
         }
 
     def cast_vote(self, voter_index: int, target_index: int) -> None:
-        # Self-voting is allowed by the game rules.
         if not (0 <= voter_index < len(self.players) and 0 <= target_index < len(self.players)):
             raise ValueError("Invalid vote.")
         self.votes[voter_index] = target_index

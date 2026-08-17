@@ -8,6 +8,26 @@ from kivy.graphics import Color, RoundedRectangle, Line
 ROOT_DIR = Path(__file__).resolve().parents[1]
 ASSET_DIR = ROOT_DIR / "assets"
 
+# Android ROMs can ship different Noto Devanagari filenames.
+# IMPORTANT: this font must NOT be assigned globally, because it may not
+# contain Latin glyphs. English UI keeps Kivy's normal font; Hindi-only text
+# explicitly opts into this font.
+_DEVANAGARI_CANDIDATES = (
+    Path("/system/fonts/NotoSansDevanagari-Regular.ttf"),
+    Path("/system/fonts/NotoSansDevanagari-VF.ttf"),
+    Path("/system/fonts/NotoSansDevanagari-Regular.otf"),
+    Path("/system/fonts/NotoSansDevanagari-VF.otf"),
+)
+DEVANAGARI_FONT = next((str(p) for p in _DEVANAGARI_CANDIDATES if p.exists()), "")
+
+
+def hindi_markup(text: str) -> str:
+    """Render a Hindi string with the Android Devanagari font in Kivy markup."""
+    if not DEVANAGARI_FONT:
+        return text
+    return f"[font={DEVANAGARI_FONT}]{text}[/font]"
+
+
 COLORS = {
     "bg": (0.035, 0.015, 0.075, 1),
     "card": (0.13, 0.06, 0.22, 0.92),
