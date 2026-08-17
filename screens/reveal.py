@@ -42,14 +42,12 @@ class RevealScreen(Screen):
         self.secret_visible = True
         self.card.markup = True
         if info["is_imposter"]:
+            # The imposter does not see the secret word. Category is enough.
             self.card.text = (
                 "[size=22sp][b]YOU ARE THE IMPOSTER[/b][/size]\n\n"
                 "[size=15sp]YOUR CATEGORY[/size]\n"
                 f"[size=30sp][b]{info['category']}[/b][/size]\n"
-                f"[size=20sp]{info['category_hi']}[/size]\n\n"
-                "[size=15sp]THE WORD WAS[/size]\n"
-                "[size=30sp][b]???[/b][/size]\n"
-                "[size=18sp]शब्द पता नहीं है[/size]"
+                f"[size=20sp]{info['category_hi']}[/size]"
             )
         else:
             self.card.text = (
