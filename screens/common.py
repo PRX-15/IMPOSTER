@@ -8,9 +8,15 @@ from kivy.graphics import Color, RoundedRectangle, Line
 ROOT_DIR = Path(__file__).resolve().parents[1]
 ASSET_DIR = ROOT_DIR / "assets"
 
-# Android's bundled Noto Sans Devanagari supports Hindi properly.
-SYSTEM_DEVANAGARI_FONT = Path("/system/fonts/NotoSansDevanagari-Regular.ttf")
-DEVANAGARI_FONT = str(SYSTEM_DEVANAGARI_FONT) if SYSTEM_DEVANAGARI_FONT.exists() else ""
+# Android ROMs can ship different Noto Devanagari filenames. Pick the first
+# one that exists so Hindi text renders instead of tofu/box glyphs.
+_DEVANAGARI_CANDIDATES = (
+    Path("/system/fonts/NotoSansDevanagari-Regular.ttf"),
+    Path("/system/fonts/NotoSansDevanagari-VF.ttf"),
+    Path("/system/fonts/NotoSansDevanagari-Regular.otf"),
+    Path("/system/fonts/NotoSansDevanagari-VF.otf"),
+)
+DEVANAGARI_FONT = next((str(p) for p in _DEVANAGARI_CANDIDATES if p.exists()), "")
 
 COLORS = {
     "bg": (0.035, 0.015, 0.075, 1),
