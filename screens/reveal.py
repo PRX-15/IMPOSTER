@@ -3,7 +3,7 @@ from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
-from .common import COLORS, NeonLabel, RoundedButton
+from .common import COLORS, NeonLabel, RoundedButton, hindi_markup
 
 
 class RevealScreen(Screen):
@@ -42,21 +42,20 @@ class RevealScreen(Screen):
         self.secret_visible = True
         self.card.markup = True
         if info["is_imposter"]:
-            # The imposter does not see the secret word. Category is enough.
             self.card.text = (
                 "[size=22sp][b]YOU ARE THE IMPOSTER[/b][/size]\n\n"
                 "[size=15sp]YOUR CATEGORY[/size]\n"
                 f"[size=30sp][b]{info['category']}[/b][/size]\n"
-                f"[size=20sp]{info['category_hi']}[/size]"
+                f"[size=20sp]{hindi_markup(info['category_hi'])}[/size]"
             )
         else:
             self.card.text = (
                 "[size=15sp]WORD[/size]\n"
                 f"[size=34sp][b]{info['word']}[/b][/size]\n"
-                f"[size=21sp]{info['word_hi']}[/size]\n\n"
+                f"[size=21sp]{hindi_markup(info['word_hi'])}[/size]\n\n"
                 "[size=15sp]CATEGORY[/size]\n"
                 f"[size=30sp][b]{info['category']}[/b][/size]\n"
-                f"[size=20sp]{info['category_hi']}[/size]"
+                f"[size=20sp]{hindi_markup(info['category_hi'])}[/size]"
             )
         Animation(pos_hint={"center_y": .58}, duration=.22, t="out_quad").start(self.card)
         final = self.state.current_reveal_index == len(self.state.players) - 1
