@@ -1,7 +1,7 @@
 from kivy.metrics import dp
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
-from .common import COLORS, NeonLabel, RoundedButton
+from .common import COLORS, NeonLabel, RoundedButton, hindi_markup
 
 
 class ResultsScreen(Screen):
@@ -27,16 +27,17 @@ class ResultsScreen(Screen):
         self.root.add_widget(NeonLabel(text=f"THE IMPOSTER WAS\n{imp.upper()}", font_size="25sp", bold=True, size_hint_y=.18))
         self.root.add_widget(NeonLabel(text=f"MOST VOTES\n{voted}", font_size="19sp", color=COLORS["muted"], size_hint_y=.13))
 
-        # Show both languages, with the Hindi strings rendered by the shared
-        # Android Devanagari-capable label font.
+        # Keep the normal Kivy font for English UI and apply the Android
+        # Devanagari font only to the Hindi strings.
         self.root.add_widget(NeonLabel(
+            markup=True,
             text=(
                 "THE SECRET WORD WAS\n"
                 f"{s.selected_word.word}\n"
-                f"{s.selected_word.word_hi}\n\n"
+                f"{hindi_markup(s.selected_word.word_hi)}\n\n"
                 "CATEGORY\n"
                 f"{s.selected_word.category}\n"
-                f"{s.selected_word.category_hi}"
+                f"{hindi_markup(s.selected_word.category_hi)}"
             ),
             font_size="20sp",
             size_hint_y=.25,
