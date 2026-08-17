@@ -27,12 +27,13 @@ class RevealScreen(Screen):
         info=self.state.get_secret_for_player(self.state.current_reveal_index); self.secret_visible=True
         self.card.text = f"YOU ARE THE IMPOSTER\n\nCATEGORY\n{info['category']}" if info['is_imposter'] else f"WORD\n{info['word']}\n\nCATEGORY\n{info['category']}"
         Animation(pos_hint={"center_y": .58}, duration=.22, t="out_quad").start(self.card)
+        final=self.state.current_reveal_index == len(self.state.players)-1
+        self.next_btn.text = "FINISH REVEAL" if final else f"PASS THE PHONE TO {self.state.players[self.state.current_reveal_index+1].upper()}"
+        self.next_btn.opacity=1; self.next_btn.disabled=False
         self.hide_event=Clock.schedule_once(lambda dt:self.hide_secret(), 5)
     def hide_secret(self):
         self.card.text="SECRET HIDDEN"; self.secret_visible=False
         Animation(pos_hint={"center_y": .5}, duration=.18, t="out_quad").start(self.card)
-        final=self.state.current_reveal_index == len(self.state.players)-1
-        self.next_btn.text = "FINISH REVEAL" if final else f"PASS THE PHONE TO {self.state.players[self.state.current_reveal_index+1].upper()}"
         self.next_btn.opacity=1; self.next_btn.disabled=False
     def next_player(self,*_):
         self.card.text=""; self.next_btn.disabled=True
