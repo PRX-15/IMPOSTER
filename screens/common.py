@@ -8,8 +8,10 @@ from kivy.graphics import Color, RoundedRectangle, Line
 ROOT_DIR = Path(__file__).resolve().parents[1]
 ASSET_DIR = ROOT_DIR / "assets"
 
-# Android ROMs can ship different Noto Devanagari filenames. Pick the first
-# one that exists so Hindi text renders instead of tofu/box glyphs.
+# Android ROMs can ship different Noto Devanagari filenames.
+# IMPORTANT: this font must NOT be assigned globally, because it may not
+# contain Latin glyphs. English UI keeps Kivy's normal font; Hindi-only text
+# explicitly opts into this font.
 _DEVANAGARI_CANDIDATES = (
     Path("/system/fonts/NotoSansDevanagari-Regular.ttf"),
     Path("/system/fonts/NotoSansDevanagari-VF.ttf"),
@@ -17,6 +19,14 @@ _DEVANAGARI_CANDIDATES = (
     Path("/system/fonts/NotoSansDevanagari-VF.otf"),
 )
 DEVANAGARI_FONT = next((str(p) for p in _DEVANAGARI_CANDIDATES if p.exists()), "")
+
+
+def hindi_markup(text: str) -> str:
+    """Render a Hindi string with the Android Devanagari font in Kivy markup."""
+    if not DEVANAGARI_FONT:
+        return text
+    return f"[font={DEVANAGARI_FONT}]{text}[/font]"
+
 
 COLORS = {
     "bg": (0.035, 0.015, 0.075, 1),
@@ -38,8 +48,6 @@ class NeonLabel(Label):
         kwargs.setdefault("color", COLORS["text"])
         kwargs.setdefault("halign", "center")
         kwargs.setdefault("valign", "middle")
-        if DEVANAGARI_FONT:
-            kwargs.setdefault("font_name", DEVANAGARI_FONT)
         super().__init__(**kwargs)
         self.bind(size=lambda *_: setattr(self, "text_size", self.size))
 
@@ -52,8 +60,6 @@ class RoundedButton(Button):
         kwargs.setdefault("color", COLORS["text"])
         kwargs.setdefault("bold", True)
         kwargs.setdefault("font_size", "18sp")
-        if DEVANAGARI_FONT:
-            kwargs.setdefault("font_name", DEVANAGARI_FONT)
         self.bg_color = bg_color or COLORS["card2"]
         self.border_color = border_color or COLORS["accent"]
         self.radius = dp(radius)
