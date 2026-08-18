@@ -24,16 +24,17 @@ The game works offline after the required Kivy dependency is installed.
 
 No KivyMD or network services are required.
 
-## Gameplay
+## How It Works
 
-- Supports **3 to 5 players**.
-- Add player names on the main menu; blank names become `Player 1`, `Player 2`, etc.
-- Pass the phone privately so each player reveals their role exactly once.
-- Normal players see the word and category.
-- The Imposter sees only the category and never sees the word.
-- After discussion, each player privately votes for another player.
-- Vote totals, ties, the actual Imposter, word, category, and caught/not-caught result are revealed at the end.
-- **Play Again** starts a fresh round with the same players.
+- 👥 **3–5 players** play together on one phone.
+- 🎭 At the start of each round, **one player is secretly chosen as the Imposter**.
+- 🕵️ **Everyone except the Imposter receives the same secret word and category.** The Imposter sees only the category.
+- 📱 Pass the phone around so each player can **privately view their role**.
+- 💬 Once everyone knows their role, **discuss clues and try to figure out who doesn't know the word**.
+- 🗳️ Each player **privately votes** for who they think the Imposter is.
+- 📊 The votes are revealed and the player with the most votes is identified.
+- 🏆 The game reveals the **Imposter, secret word, and whether the group caught them**.
+- 🔄 **Play Again** starts another round with the same players.
 
 ## Project Structure
 
