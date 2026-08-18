@@ -2,6 +2,8 @@
 
 IMPOSTER is an Android-first local pass-and-play multiplayer social-deduction game built with Python and Kivy. One player is secretly assigned as the Imposter each round, while every other player sees the secret word and category. Everyone discusses clues in real life, votes privately on one phone, and then reveals whether the group caught the Imposter.
 
+> **One phone. One secret word. One Imposter. Can you find them?**
+
 ## Run on Android
 
 You can use **any Python interpreter, IDE, or development environment that supports Python and Kivy**. **Pydroid 3 is recommended** for the easiest setup on Android.
