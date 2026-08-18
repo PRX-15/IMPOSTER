@@ -4,15 +4,14 @@ IMPOSTER is an Android-first local pass-and-play multiplayer social-deduction ga
 
 ## Run with Pydroid 3
 
-1. Install **Pydroid 3** on Android.
-2. In Pydroid 3, install the Kivy support/repository plugin if prompted.
-3. Install dependencies from this repository:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Open `main.py` in Pydroid 3 and press Run.
+1. **Install [Pydroid 3](https://play.google.com/store/apps/details?id=ru.iiec.pydroid3) on Android.**
+2. **Install Kivy support in Pydroid 3.** Open Pydroid 3's Pip/Plugins section and install the Kivy package/plugin.
+3. **Download the project ZIP.** On this GitHub page, tap **Code → Download ZIP**, then open your Downloads folder.
+4. **Extract the ZIP** into a folder on your phone.
+5. **Open `main.py` in Pydroid 3** and press Run.
+6. **Enjoy!**
 
-The game works offline after dependencies are installed.
+The game works offline after the required Kivy dependency is installed.
 
 ## Requirements
 
