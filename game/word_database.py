@@ -1,166 +1,84 @@
-"""Curated bilingual English/Hindi word and category database for IMPOSTER."""
+"""Large curated English/Hindi word database for IMPOSTER."""
 
-# Each category contains game-friendly words. English and Hindi are kept together
-# so the reveal screen can display both languages without changing game logic.
+# Each category is bilingual: English category name + Hindi category translation.
+# Words are stored compactly as English|Hindi pairs and expanded into the flat
+# WORD_DATABASE shape consumed by game.game_logic.
 CATEGORY_DATA = {
-    "FOOD": ("भोजन", [
-        ("PIZZA", "पिज़्ज़ा"), ("BURGER", "बर्गर"), ("SUSHI", "सुशी"),
-        ("BIRYANI", "बिरयानी"), ("DOSA", "डोसा"), ("NOODLES", "नूडल्स"),
-        ("SANDWICH", "सैंडविच"), ("PASTA", "पास्ता"), ("TACO", "टैको"),
-        ("SAMOSA", "समोसा")]),
-    "ANIMALS": ("जानवर", [
-        ("LION", "शेर"), ("TIGER", "बाघ"), ("ELEPHANT", "हाथी"),
-        ("PENGUIN", "पेंगुइन"), ("DOLPHIN", "डॉल्फ़िन"), ("GIRAFFE", "जिराफ़"),
-        ("MONKEY", "बंदर"), ("GORILLA", "गोरिल्ला"), ("CROCODILE", "मगरमच्छ"),
-        ("KANGAROO", "कंगारू")]),
-    "FRUITS": ("फल", [
-        ("APPLE", "सेब"), ("MANGO", "आम"), ("BANANA", "केला"),
-        ("ORANGE", "संतरा"), ("WATERMELON", "तरबूज़"), ("GRAPES", "अंगूर"),
-        ("PINEAPPLE", "अनानास"), ("STRAWBERRY", "स्ट्रॉबेरी"), ("PAPAYA", "पपीता"),
-        ("POMEGRANATE", "अनार")]),
-    "VEGETABLES": ("सब्ज़ियाँ", [
-        ("POTATO", "आलू"), ("TOMATO", "टमाटर"), ("CARROT", "गाजर"),
-        ("ONION", "प्याज़"), ("SPINACH", "पालक"), ("CABBAGE", "पत्तागोभी"),
-        ("CAULIFLOWER", "फूलगोभी"), ("PEAS", "मटर"), ("CORN", "मक्का"),
-        ("CUCUMBER", "खीरा")]),
-    "DRINKS": ("पेय", [
-        ("WATER", "पानी"), ("TEA", "चाय"), ("COFFEE", "कॉफ़ी"),
-        ("LEMONADE", "नींबू पानी"), ("MILK", "दूध"), ("JUICE", "जूस"),
-        ("SMOOTHIE", "स्मूदी"), ("MILKSHAKE", "मिल्कशेक"), ("LASSI", "लस्सी"),
-        ("COCONUT WATER", "नारियल पानी")]),
-    "DESSERTS": ("मिठाइयाँ", [
-        ("ICE CREAM", "आइसक्रीम"), ("CAKE", "केक"), ("DONUT", "डोनट"),
-        ("BROWNIE", "ब्राउनी"), ("GULAB JAMUN", "गुलाब जामुन"), ("JALEBI", "जलेबी"),
-        ("KHEER", "खीर"), ("PUDDING", "पुडिंग"), ("CUPCAKE", "कपकेक"),
-        ("RASGULLA", "रसगुल्ला")]),
-    "SPORTS": ("खेल", [
-        ("CRICKET", "क्रिकेट"), ("FOOTBALL", "फुटबॉल"), ("BASKETBALL", "बास्केटबॉल"),
-        ("TENNIS", "टेनिस"), ("BADMINTON", "बैडमिंटन"), ("VOLLEYBALL", "वॉलीबॉल"),
-        ("HOCKEY", "हॉकी"), ("BOXING", "मुक्केबाज़ी"), ("SWIMMING", "तैराकी"),
-        ("WRESTLING", "कुश्ती")]),
-    "VEHICLES": ("वाहन", [
-        ("CAR", "कार"), ("BUS", "बस"), ("TRAIN", "ट्रेन"), ("BICYCLE", "साइकिल"),
-        ("MOTORCYCLE", "मोटरसाइकिल"), ("SCOOTER", "स्कूटर"), ("AIRPLANE", "हवाई जहाज़"),
-        ("HELICOPTER", "हेलीकॉप्टर"), ("BOAT", "नाव"), ("TRUCK", "ट्रक")]),
-    "PLACES": ("स्थान", [
-        ("AIRPORT", "हवाई अड्डा"), ("HOSPITAL", "अस्पताल"), ("SCHOOL", "स्कूल"),
-        ("BEACH", "समुद्र तट"), ("CASTLE", "किला"), ("MUSEUM", "संग्रहालय"),
-        ("CINEMA", "सिनेमा"), ("RESTAURANT", "रेस्तरां"), ("LIBRARY", "पुस्तकालय"),
-        ("PARK", "पार्क")]),
-    "PROFESSIONS": ("पेशे", [
-        ("DOCTOR", "डॉक्टर"), ("TEACHER", "शिक्षक"), ("ENGINEER", "इंजीनियर"),
-        ("CHEF", "रसोइया"), ("PILOT", "पायलट"), ("POLICE OFFICER", "पुलिस अधिकारी"),
-        ("FIREFIGHTER", "दमकलकर्मी"), ("FARMER", "किसान"), ("ARTIST", "कलाकार"),
-        ("SCIENTIST", "वैज्ञानिक")]),
-    "CLOTHES": ("कपड़े", [
-        ("SHIRT", "कमीज़"), ("T-SHIRT", "टी-शर्ट"), ("JEANS", "जींस"),
-        ("DRESS", "पोशाक"), ("SKIRT", "स्कर्ट"), ("JACKET", "जैकेट"),
-        ("SWEATER", "स्वेटर"), ("SHORTS", "शॉर्ट्स"), ("SAREE", "साड़ी"),
-        ("KURTA", "कुर्ता")]),
-    "FURNITURE": ("फर्नीचर", [
-        ("CHAIR", "कुर्सी"), ("TABLE", "मेज़"), ("SOFA", "सोफ़ा"), ("BED", "बिस्तर"),
-        ("DESK", "डेस्क"), ("CUPBOARD", "अलमारी"), ("BOOKSHELF", "किताबों की अलमारी"),
-        ("BENCH", "बेंच"), ("STOOL", "स्टूल"), ("WARDROBE", "कपड़ों की अलमारी")]),
-    "KITCHEN": ("रसोई", [
-        ("PLATE", "प्लेट"), ("SPOON", "चम्मच"), ("FORK", "कांटा"), ("KNIFE", "चाकू"),
-        ("PAN", "कड़ाही"), ("KETTLE", "केतली"), ("BLENDER", "मिक्सर"),
-        ("OVEN", "ओवन"), ("REFRIGERATOR", "फ़्रिज"), ("PRESSURE COOKER", "प्रेशर कुकर")]),
-    "BATHROOM": ("बाथरूम", [
-        ("TOOTHBRUSH", "टूथब्रश"), ("TOOTHPASTE", "टूथपेस्ट"), ("SOAP", "साबुन"),
-        ("SHAMPOO", "शैम्पू"), ("TOWEL", "तौलिया"), ("MIRROR", "आईना"),
-        ("BATHTUB", "बाथटब"), ("SHOWER", "शॉवर"), ("COMB", "कंघी"), ("BUCKET", "बाल्टी")]),
-    "SCHOOL": ("स्कूल", [
-        ("BOOK", "किताब"), ("NOTEBOOK", "कॉपी"), ("PENCIL", "पेंसिल"), ("ERASER", "रबर"),
-        ("RULER", "स्केल"), ("BACKPACK", "स्कूल बैग"), ("CLASSROOM", "कक्षा"),
-        ("BLACKBOARD", "श्यामपट्ट"), ("HOMEWORK", "गृहकार्य"), ("EXAM", "परीक्षा")]),
-    "TECHNOLOGY": ("प्रौद्योगिकी", [
-        ("SMARTPHONE", "स्मार्टफ़ोन"), ("COMPUTER", "कंप्यूटर"), ("LAPTOP", "लैपटॉप"),
-        ("KEYBOARD", "कीबोर्ड"), ("MOUSE", "माउस"), ("ROBOT", "रोबोट"),
-        ("CAMERA", "कैमरा"), ("TELEVISION", "टेलीविज़न"), ("HEADPHONES", "हेडफ़ोन"),
-        ("DRONE", "ड्रोन")]),
-    "HOME": ("घर", [
-        ("DOOR", "दरवाज़ा"), ("WINDOW", "खिड़की"), ("LAMP", "लैंप"), ("FAN", "पंखा"),
-        ("CLOCK", "घड़ी"), ("CURTAIN", "परदा"), ("PILLOW", "तकिया"), ("BLANKET", "कंबल"),
-        ("CARPET", "कालीन"), ("CANDLE", "मोमबत्ती")]),
-    "NATURE": ("प्रकृति", [
-        ("MOUNTAIN", "पहाड़"), ("VOLCANO", "ज्वालामुखी"), ("FOREST", "जंगल"),
-        ("WATERFALL", "झरना"), ("DESERT", "रेगिस्तान"), ("RIVER", "नदी"),
-        ("LAKE", "झील"), ("RAINBOW", "इंद्रधनुष"), ("GLACIER", "हिमनद"),
-        ("ISLAND", "द्वीप")]),
-    "WEATHER": ("मौसम", [
-        ("RAIN", "बारिश"), ("SNOW", "बर्फ़बारी"), ("THUNDER", "गरज"),
-        ("LIGHTNING", "बिजली"), ("CLOUD", "बादल"), ("WIND", "हवा"),
-        ("FOG", "कोहरा"), ("STORM", "तूफ़ान"), ("HAIL", "ओले"), ("SUNSHINE", "धूप")]),
-    "SPACE": ("अंतरिक्ष", [
-        ("SUN", "सूरज"), ("MOON", "चाँद"), ("EARTH", "पृथ्वी"), ("MARS", "मंगल"),
-        ("JUPITER", "बृहस्पति"), ("STAR", "तारा"), ("PLANET", "ग्रह"), ("ROCKET", "रॉकेट"),
-        ("ASTRONAUT", "अंतरिक्ष यात्री"), ("SATELLITE", "उपग्रह")]),
-    "MUSIC": ("संगीत", [
-        ("GUITAR", "गिटार"), ("PIANO", "पियानो"), ("DRUMS", "ड्रम"), ("VIOLIN", "वायलिन"),
-        ("FLUTE", "बांसुरी"), ("TRUMPET", "तुरही"), ("MICROPHONE", "माइक्रोफ़ोन"),
-        ("SINGER", "गायक"), ("CONCERT", "संगीत कार्यक्रम"), ("DJ", "डीजे")]),
-    "MOVIES": ("फ़िल्में", [
-        ("SUPERHERO", "सुपरहीरो"), ("VILLAIN", "खलनायक"), ("ACTOR", "अभिनेता"),
-        ("DIRECTOR", "निर्देशक"), ("CINEMA", "सिनेमा"), ("TICKET", "टिकट"),
-        ("MONSTER", "राक्षस"), ("PRINCESS", "राजकुमारी"), ("DETECTIVE", "जासूस"),
-        ("COMEDY", "कॉमेडी")]),
-    "GAMES": ("गेम्स", [
-        ("CHESS", "शतरंज"), ("CARDS", "ताश"), ("DICE", "पासा"), ("VIDEO GAME", "वीडियो गेम"),
-        ("PUZZLE", "पहेली"), ("HIDE AND SEEK", "लुका-छिपी"), ("TAG", "पकड़म-पकड़ाई"),
-        ("LUDO", "लूडो"), ("CARROM", "कैरम"), ("RACING GAME", "रेसिंग गेम")]),
-    "TOYS": ("खिलौने", [
-        ("TEDDY BEAR", "टेडी बियर"), ("DOLL", "गुड़िया"), ("TOY CAR", "खिलौना कार"),
-        ("BALL", "गेंद"), ("YO-YO", "यो-यो"), ("KITE", "पतंग"), ("PUZZLE CUBE", "पहेली घन"),
-        ("TOY TRAIN", "खिलौना ट्रेन"), ("BUILDING BLOCKS", "खिलौना ब्लॉक"), ("TOY ROBOT", "खिलौना रोबोट")]),
-    "TRAVEL": ("यात्रा", [
-        ("PASSPORT", "पासपोर्ट"), ("SUITCASE", "सूटकेस"), ("MAP", "नक्शा"), ("TOURIST", "पर्यटक"),
-        ("HOTEL", "होटल"), ("BEACH", "समुद्र तट"), ("AIRPORT", "हवाई अड्डा"),
-        ("TRAIN STATION", "रेलवे स्टेशन"), ("CAMERA", "कैमरा"), ("COMPASS", "दिशासूचक")]),
-    "BODY": ("शरीर", [
-        ("HEAD", "सिर"), ("EYE", "आँख"), ("EAR", "कान"), ("NOSE", "नाक"),
-        ("MOUTH", "मुँह"), ("HAND", "हाथ"), ("FINGER", "उंगली"), ("FOOT", "पैर"),
-        ("HEART", "दिल"), ("BRAIN", "दिमाग")]),
-    "EMOTIONS": ("भावनाएँ", [
-        ("HAPPINESS", "खुशी"), ("SADNESS", "उदासी"), ("ANGER", "गुस्सा"), ("FEAR", "डर"),
-        ("LOVE", "प्यार"), ("SURPRISE", "आश्चर्य"), ("EXCITEMENT", "उत्साह"),
-        ("JEALOUSY", "ईर्ष्या"), ("CONFUSION", "उलझन"), ("PRIDE", "गर्व")]),
-    "CELEBRATIONS": ("उत्सव", [
-        ("BIRTHDAY", "जन्मदिन"), ("WEDDING", "शादी"), ("FESTIVAL", "त्योहार"),
-        ("DIWALI", "दिवाली"), ("HOLI", "होली"), ("CHRISTMAS", "क्रिसमस"),
-        ("EID", "ईद"), ("FIREWORKS", "आतिशबाज़ी"), ("GIFT", "उपहार"), ("PARTY", "पार्टी")]),
-    "COUNTRIES": ("देश", [
-        ("INDIA", "भारत"), ("JAPAN", "जापान"), ("FRANCE", "फ़्रांस"), ("BRAZIL", "ब्राज़ील"),
-        ("CANADA", "कनाडा"), ("AUSTRALIA", "ऑस्ट्रेलिया"), ("EGYPT", "मिस्र"),
-        ("ITALY", "इटली"), ("CHINA", "चीन"), ("NEPAL", "नेपाल")]),
-    "CITY LIFE": ("शहरी जीवन", [
-        ("TRAFFIC", "यातायात"), ("METRO", "मेट्रो"), ("TRAFFIC LIGHT", "ट्रैफ़िक लाइट"),
-        ("MALL", "मॉल"), ("MARKET", "बाज़ार"), ("APARTMENT", "अपार्टमेंट"),
-        ("TAXI", "टैक्सी"), ("BUS STOP", "बस स्टॉप"), ("STREET", "सड़क"),
-        ("SKYSCRAPER", "गगनचुंबी इमारत")]),
-    "FARM": ("खेत", [
-        ("COW", "गाय"), ("HORSE", "घोड़ा"), ("CHICKEN", "मुर्गी"), ("GOAT", "बकरी"),
-        ("SHEEP", "भेड़"), ("TRACTOR", "ट्रैक्टर"), ("BARN", "खलिहान"), ("FARMER", "किसान"),
-        ("WHEAT", "गेहूँ"), ("RICE", "चावल")]),
-    "SEA": ("समुद्र", [
-        ("SHARK", "शार्क"), ("WHALE", "व्हेल"), ("OCTOPUS", "ऑक्टोपस"), ("CRAB", "केकड़ा"),
-        ("TURTLE", "कछुआ"), ("SEASHELL", "समुद्री सीप"), ("CORAL", "प्रवाल"),
-        ("SUBMARINE", "पनडुब्बी"), ("LIGHTHOUSE", "प्रकाशस्तंभ"), ("WAVE", "लहर")]),
-    "COLORS": ("रंग", [
-        ("RED", "लाल"), ("BLUE", "नीला"), ("GREEN", "हरा"), ("YELLOW", "पीला"),
-        ("ORANGE", "नारंगी"), ("PURPLE", "बैंगनी"), ("PINK", "गुलाबी"), ("BLACK", "काला"),
-        ("WHITE", "सफ़ेद"), ("BROWN", "भूरा")]),
+    "FOOD": ("भोजन", "Pizza|पिज़्ज़ा;Burger|बर्गर;Biryani|बिरयानी;Dosa|डोसा;Idli|इडली;Samosa|समोसा;Pav Bhaji|पाव भाजी;Chole Bhature|छोले भटूरे;Paneer Tikka|पनीर टिक्का;Rajma Chawal|राजमा चावल;Pani Puri|पानी पूरी;Masala Dosa|मसाला डोसा;Vada Pav|वड़ा पाव;Paratha|पराठा;Noodles|नूडल्स;Pasta|पास्ता;Sandwich|सैंडविच;Fried Rice|फ्राइड राइस"),
+    "INDIAN FOOD": ("भारतीय भोजन", "Butter Chicken|बटर चिकन;Dal Makhani|दाल मखनी;Kadhai Paneer|कड़ाही पनीर;Palak Paneer|पालक पनीर;Malai Kofta|मलाई कोफ्ता;Aloo Gobi|आलू गोभी;Chole|छोले;Kadhi|कढ़ी;Poha|पोहा;Upma|उपमा;Pongal|पोंगल;Appam|अप्पम;Uttapam|उत्तपम;Thepla|थेपला;Dhokla|ढोकला;Litti Chokha|लिट्टी चोखा;Bisi Bele Bath|बिसी बेले बाथ;Pesarattu|पेसरट्टू;Momos|मोमोज;Thali|थाली"),
+    "SNACKS & STREET FOOD": ("स्ट्रीट फ़ूड", "Pani Puri|पानी पूरी;Vada Pav|वड़ा पाव;Bhel Puri|भेल पूरी;Sev Puri|सेव पूरी;Dahi Puri|दही पूरी;Aloo Tikki|आलू टिक्की;Chaat|चाट;Kachori|कचौरी;Pakora|पकौड़ा;Samosa|समोसा;Pav Bhaji|पाव भाजी;Dabeli|दाबेली;Frankie|फ्रेंकी;Chole Kulche|छोले कुलचे;Kathi Roll|काठी रोल;Jhal Muri|झालमूड़ी;Mirchi Bhajji|मिर्ची भज्जी;Bread Pakora|ब्रेड पकौड़ा;Egg Roll|एग रोल;Corn Chaat|कॉर्न चाट"),
+    "SWEETS": ("मिठाइयाँ", "Gulab Jamun|गुलाब जामुन;Jalebi|जलेबी;Rasgulla|रसगुल्ला;Rasmalai|रसमलाई;Kaju Katli|काजू कतली;Barfi|बर्फी;Ladoo|लड्डू;Motichoor Ladoo|मोतीचूर लड्डू;Peda|पेड़ा;Mysore Pak|मैसूर पाक;Soan Papdi|सोन पापड़ी;Gajar Halwa|गाजर हलवा;Moong Dal Halwa|मूंग दाल हलवा;Kheer|खीर;Shrikhand|श्रीखंड;Sandesh|संदेश;Malpua|मालपुआ;Petha|पेठा;Kulfi|कुल्फी;Modak|मोदक"),
+    "DRINKS": ("पेय", "Tea|चाय;Coffee|कॉफ़ी;Lassi|लस्सी;Chaas|छाछ;Nimbu Pani|नींबू पानी;Mango Shake|मैंगो शेक;Cold Coffee|कोल्ड कॉफ़ी;Jaljeera|जलजीरा;Aam Panna|आम पन्ना;Coconut Water|नारियल पानी;Milkshake|मिल्कशेक;Juice|जूस;Lemon Tea|नींबू चाय;Masala Chai|मसाला चाय;Filter Coffee|फ़िल्टर कॉफ़ी;Thandai|ठंडाई;Rooh Afza|रूह अफ़ज़ा;Sugarcane Juice|गन्ने का रस;Falooda|फालूदा;Water|पानी"),
+    "ANIMALS": ("जानवर", "Lion|शेर;Tiger|बाघ;Elephant|हाथी;Leopard|तेंदुआ;Cheetah|चीता;Bear|भालू;Monkey|बंदर;Gorilla|गोरिल्ला;Giraffe|जिराफ़;Zebra|ज़ेब्रा;Horse|घोड़ा;Cow|गाय;Buffalo|भैंस;Dog|कुत्ता;Cat|बिल्ली;Rabbit|खरगोश;Deer|हिरन;Fox|लोमड़ी;Wolf|भेड़िया;Kangaroo|कंगारू"),
+    "BIRDS": ("पक्षी", "Peacock|मोर;Parrot|तोता;Sparrow|गौरैया;Crow|कौआ;Pigeon|कबूतर;Eagle|गरुड़;Owl|उल्लू;Swan|हंस;Duck|बतख;Hen|मुर्गी;Rooster|मुर्गा;Kingfisher|रामचिरैया;Flamingo|राजहंस;Penguin|पेंगुइन;Ostrich|शुतुरमुर्ग;Cuckoo|कोयल;Woodpecker|कठफोड़वा;Vulture|गिद्ध;Myna|मैना;Crane|सारस"),
+    "FRUITS": ("फल", "Apple|सेब;Mango|आम;Banana|केला;Orange|संतरा;Grapes|अंगूर;Watermelon|तरबूज़;Papaya|पपीता;Pomegranate|अनार;Guava|अमरूद;Pineapple|अनानास;Coconut|नारियल;Lychee|लीची;Chikoo|चीकू;Jackfruit|कटहल;Custard Apple|सीताफल;Pear|नाशपाती;Peach|आड़ू;Plum|आलूबुखारा;Strawberry|स्ट्रॉबेरी;Muskmelon|खरबूजा"),
+    "VEGETABLES": ("सब्ज़ियाँ", "Potato|आलू;Tomato|टमाटर;Onion|प्याज़;Carrot|गाजर;Spinach|पालक;Cauliflower|फूलगोभी;Cabbage|पत्तागोभी;Peas|मटर;Brinjal|बैंगन;Okra|भिंडी;Bitter Gourd|करेला;Bottle Gourd|लौकी;Ridge Gourd|तुरई;Radish|मूली;Beetroot|चुकंदर;Capsicum|शिमला मिर्च;Pumpkin|कद्दू;Cucumber|खीरा;Corn|मक्का;Sweet Potato|शकरकंद"),
+    "CRICKET": ("क्रिकेट", "Virat Kohli|विराट कोहली;Rohit Sharma|रोहित शर्मा;MS Dhoni|एम.एस. धोनी;Sachin Tendulkar|सचिन तेंदुलकर;Kapil Dev|कपिल देव;Jasprit Bumrah|जसप्रीत बुमराह;Hardik Pandya|हार्दिक पांड्या;Ravindra Jadeja|रविंद्र जडेजा;Rishabh Pant|ऋषभ पंत;KL Rahul|के.एल. राहुल;Shubman Gill|शुभमन गिल;Yuvraj Singh|युवराज सिंह;Sourav Ganguly|सौरव गांगुली;Rahul Dravid|राहुल द्रविड़;Anil Kumble|अनिल कुंबले;Babar Azam|बाबर आज़म;Kane Williamson|केन विलियमसन;Ben Stokes|बेन स्टोक्स;Steve Smith|स्टीव स्मिथ;AB de Villiers|एबी डिविलियर्स"),
+    "FOOTBALL": ("फ़ुटबॉल", "Lionel Messi|लियोनेल मेसी;Cristiano Ronaldo|क्रिस्टियानो रोनाल्डो;Neymar|नेमार;Kylian Mbappé|किलियन एमबाप्पे;Erling Haaland|एर्लिंग हालांड;Sunil Chhetri|सुनील छेत्री;David Beckham|डेविड बेकहम;Ronaldinho|रोनाल्डिन्हो;Zinedine Zidane|ज़िनेदिन ज़िदान;Diego Maradona|डिएगो माराडोना;Pele|पेले;Mohamed Salah|मोहम्मद सलाह;Harry Kane|हैरी केन;Kevin De Bruyne|केविन डी ब्रूने;Sergio Ramos|सर्जियो रामोस;Luka Modrić|लुका मोड्रिच;N'Golo Kanté|एन'गोलो कांते;Manuel Neuer|मैनुअल नॉयर;Vinícius Júnior|विनीसियस जूनियर"),
+    "SPORTS": ("खेल", "Cricket|क्रिकेट;Football|फ़ुटबॉल;Badminton|बैडमिंटन;Hockey|हॉकी;Tennis|टेनिस;Basketball|बास्केटबॉल;Wrestling|कुश्ती;Boxing|मुक्केबाज़ी;Swimming|तैराकी;Athletics|एथलेटिक्स;Table Tennis|टेबल टेनिस;Volleyball|वॉलीबॉल;Kabaddi|कबड्डी;Chess|शतरंज;Archery|तीरंदाज़ी;Gymnastics|जिम्नास्टिक्स;Golf|गोल्फ;Formula 1|फ़ॉर्मूला 1;Cycling|साइक्लिंग;Shooting|शूटिंग"),
+    "OLYMPICS": ("ओलंपिक", "Neeraj Chopra|नीरज चोपड़ा;PV Sindhu|पी.वी. सिंधु;Mary Kom|मैरी कॉम;Abhinav Bindra|अभिनव बिंद्रा;Mirabai Chanu|मीराबाई चानू;Sakshi Malik|साक्षी मलिक;Sushil Kumar|सुशील कुमार;Dipa Karmakar|दीपा करमाकर;Lovlina Borgohain|लवलीना बोरगोहेन;Manu Bhaker|मनु भाकर;Gagan Narang|गगन नारंग;Leander Paes|लिएंडर पेस;Sania Mirza|सानिया मिर्ज़ा;Vijender Singh|विजेंदर सिंह;Abhishek Verma|अभिषेक वर्मा;Bajrang Punia|बजरंग पूनिया;Ravi Dahiya|रवि दहिया;Hima Das|हिमा दास;Avinash Sable|अविनाश साबले;Swapna Barman|स्वप्ना बर्मन"),
+    "ACTORS - BOLLYWOOD": ("बॉलीवुड अभिनेता", "Shah Rukh Khan|शाहरुख़ ख़ान;Salman Khan|सलमान ख़ान;Aamir Khan|आमिर ख़ान;Akshay Kumar|अक्षय कुमार;Ajay Devgn|अजय देवगन;Ranbir Kapoor|रणबीर कपूर;Ranveer Singh|रणवीर सिंह;Amitabh Bachchan|अमिताभ बच्चन;Hrithik Roshan|ऋतिक रोशन;Rajkummar Rao|राजकुमार राव;Ayushmann Khurrana|आयुष्मान खुराना;Varun Dhawan|वरुण धवन;Vicky Kaushal|विक्की कौशल;Shahid Kapoor|शाहिद कपूर;Saif Ali Khan|सैफ़ अली ख़ान;Suniel Shetty|सुनील शेट्टी;Anil Kapoor|अनिल कपूर;Emraan Hashmi|इमरान हाशमी;Kartik Aaryan|कार्तिक आर्यन;Nawazuddin Siddiqui|नवाज़ुद्दीन सिद्दीकी"),
+    "ACTRESSES - BOLLYWOOD": ("बॉलीवुड अभिनेत्री", "Deepika Padukone|दीपिका पादुकोण;Alia Bhatt|आलिया भट्ट;Priyanka Chopra|प्रियंका चोपड़ा;Kareena Kapoor|करीना कपूर;Katrina Kaif|कैटरीना कैफ़;Anushka Sharma|अनुष्का शर्मा;Shraddha Kapoor|श्रद्धा कपूर;Kriti Sanon|कृति सैनन;Taapsee Pannu|तापसी पन्नू;Kiara Advani|कियारा आडवाणी;Vidya Balan|विद्या बालन;Rani Mukerji|रानी मुखर्जी;Kajol|काजोल;Madhuri Dixit|माधुरी दीक्षित;Aishwarya Rai|ऐश्वर्या राय;Kangana Ranaut|कंगना रनौत;Sonam Kapoor|सोनम कपूर;Bhumi Pednekar|भूमि पेडनेकर;Disha Patani|दिशा पटानी;Rajkummar Rao|राजकुमार राव"),
+    "ACTORS - SOUTH": ("दक्षिण भारतीय अभिनेता", "Rajinikanth|रजनीकांत;Kamal Haasan|कमल हासन;Vijay|विजय;Ajith Kumar|अजीत कुमार;Suriya|सूर्या;Dhanush|धनुष;Vikram|विक्रम;Sivakarthikeyan|शिवकार्तिकेयन;Allu Arjun|अल्लू अर्जुन;Prabhas|प्रभास;Ram Charan|राम चरण;Jr NTR|जूनियर एनटीआर;Mahesh Babu|महेश बाबू;Pawan Kalyan|पवन कल्याण;Fahadh Faasil|फहद फ़ासिल;Dulquer Salmaan|दुलकर सलमान;Yash|यश;Rishab Shetty|ऋषभ शेट्टी;Vijay Sethupathi|विजय सेतुपति;Nani|नानी"),
+    "ACTRESSES - SOUTH": ("दक्षिण भारतीय अभिनेत्री", "Nayanthara|नयनतारा;Samantha Ruth Prabhu|सामंथा रुथ प्रभु;Sai Pallavi|साई पल्लवी;Rashmika Mandanna|रश्मिका मंदाना;Kajal Aggarwal|काजल अग्रवाल;Anushka Shetty|अनुष्का शेट्टी;Keerthy Suresh|कीर्ति सुरेश;Pooja Hegde|पूजा हेगड़े;Tamannaah Bhatia|तमन्ना भाटिया;Trisha Krishnan|त्रिशा कृष्णन;Shriya Saran|श्रिया सरन;Rakul Preet Singh|रकुल प्रीत सिंह;Regina Cassandra|रेजिना कैसेंड्रा;Jyothika|ज्योतिका;Amala Paul|अमला पॉल;Nazriya Nazim|नाज़रिया नाज़िम;Priyamani|प्रियामणि;Aditi Rao Hydari|अदिति राव हैदरी;Sai Dharam Tej|साई धरम तेज;Sobhita Dhulipala|शोभिता धुलिपाला"),
+    "MOVIES - BOLLYWOOD": ("बॉलीवुड फ़िल्में", "3 Idiots|3 इडियट्स;Dangal|दंगल;PK|पीके;Sholay|शोले;Lagaan|लगान;Dilwale Dulhania Le Jayenge|दिलवाले दुल्हनिया ले जाएंगे;Kuch Kuch Hota Hai|कुछ कुछ होता है;Kabhi Khushi Kabhie Gham|कभी खुशी कभी ग़म;Zindagi Na Milegi Dobara|ज़िंदगी ना मिलेगी दोबारा;Gully Boy|गली बॉय;Andhadhun|अंधाधुन;Drishyam|दृश्यम;Bhool Bhulaiyaa|भूल भुलैया;Stree|स्त्री;Barfi!|बर्फ़ी!;Munna Bhai M.B.B.S.|मुन्ना भाई एम.बी.बी.एस.;Taare Zameen Par|तारे ज़मीन पर;Queen|क्वीन;Chak De! India|चक दे! इंडिया;Bajrangi Bhaijaan|बजरंगी भाईजान"),
+    "MOVIES - SOUTH": ("दक्षिण भारतीय फ़िल्में", "Baahubali|बाहुबली;RRR|आरआरआर;Pushpa|पुष्पा;KGF|केजीएफ;Kantara|कांतारा;Leo|लियो;Jailer|जेलर;Vikram|विक्रम;Master|मास्टर;Drishyam|दृश्यम;Arjun Reddy|अर्जुन रेड्डी;Magadheera|मगधीरा;Eega|ईगा;Kumbalangi Nights|कुंबलंगी नाइट्स;Premam|प्रेमम;96|96;Sairat|सैराट;Lucifer|लूसिफ़र;Manjummel Boys|मंजुम्मेल बॉयज़;Aavesham|आवेशम"),
+    "MOVIES - HOLLYWOOD": ("हॉलीवुड फ़िल्में", "Titanic|टाइटैनिक;Avatar|अवतार;Avengers: Endgame|एवेंजर्स: एंडगेम;Avengers: Infinity War|एवेंजर्स: इन्फिनिटी वॉर;The Dark Knight|द डार्क नाइट;Spider-Man|स्पाइडर-मैन;Iron Man|आयरन मैन;Interstellar|इंटरस्टेलर;Inception|इंसेप्शन;Jurassic Park|जुरासिक पार्क;Harry Potter|हैरी पॉटर;The Lion King|द लायन किंग;Frozen|फ्रोजन;Toy Story|टॉय स्टोरी;Home Alone|होम अलोन;The Matrix|द मैट्रिक्स;Oppenheimer|ओपेनहाइमर;Barbie|बार्बी;Mission: Impossible|मिशन: इम्पॉसिबल;Fast & Furious|फास्ट एंड फ्यूरियस"),
+    "MOVIES - ANIMATED": ("एनिमेटेड फ़िल्में", "Frozen|फ्रोजन;Moana|मोआना;Coco|कोको;Toy Story|टॉय स्टोरी;The Incredibles|द इनक्रेडिबल्स;Up|अप;Finding Nemo|फाइंडिंग निमो;Kung Fu Panda|कुंग फू पांडा;Shrek|श्रेक;Despicable Me|डेस्पिकेबल मी;Minions|मिनियंस;Zootopia|ज़ूटोपिया;Inside Out|इनसाइड आउट;Ratatouille|रैटाटुई;Wall-E|वॉल-ई;Cars|कार्स;How to Train Your Dragon|हाउ टू ट्रेन योर ड्रैगन;The Lion King|द लायन किंग;Mulan|मुलान;Encanto|एन्कैंटो"),
+    "WEB SERIES - INDIAN": ("भारतीय वेब सीरीज़", "Panchayat|पंचायत;Mirzapur|मिर्ज़ापुर;The Family Man|द फ़ैमिली मैन;Scam 1992|स्कैम 1992;Sacred Games|सेक्रेड गेम्स;Kota Factory|कोटा फ़ैक्ट्री;Aspirants|एस्पिरेंट्स;Gullak|गुल्लक;TVF Pitchers|टीवीएफ पिचर्स;Made in Heaven|मेड इन हेवन;Farzi|फ़र्ज़ी;Paatal Lok|पाताल लोक;Special OPS|स्पेशल ओपीएस;Delhi Crime|दिल्ली क्राइम;Rocket Boys|रॉकेट बॉयज़;Cubicles|क्यूबिकल्स;Hostel Daze|होस्टल डेज़;Jamtara|जामताड़ा;Mismatched|मिसमैच्ड;Heeramandi|हीरामंडी"),
+    "TV SHOWS - INDIAN": ("भारतीय टीवी शो", "Taarak Mehta Ka Ooltah Chashmah|तारक मेहता का उल्टा चश्मा;CID|सीआईडी;KBC|कौन बनेगा करोड़पति;Bigg Boss|बिग बॉस;Indian Idol|इंडियन आइडल;Shaktimaan|शक्तिमान;Sarabhai vs Sarabhai|साराभाई बनाम साराभाई;Comedy Nights with Kapil|कॉमेडी नाइट्स विद कपिल;The Kapil Sharma Show|द कपिल शर्मा शो;Dance India Dance|डांस इंडिया डांस;Sa Re Ga Ma Pa|सा रे गा मा पा;Crime Patrol|क्राइम पेट्रोल;Anupamaa|अनुपमा;Yeh Rishta Kya Kehlata Hai|ये रिश्ता क्या कहलाता है;Balika Vadhu|बालिका वधू;Malgudi Days|मालगुडी डेज़;Wagle Ki Duniya|वागले की दुनिया;Ramayan|रामायण;Mahabharat|महाभारत;Shaktimaan|शक्तिमान"),
+    "CARTOONS": ("कार्टून", "Tom and Jerry|टॉम एंड जेरी;Doraemon|डोरेमोन;Shinchan|शिनचैन;Oggy and the Cockroaches|ऑगी एंड द कॉकरोचेस;Chhota Bheem|छोटा भीम;Motu Patlu|मोटू पतलू;Noddy|नोडी;Pokemon|पोकेमॉन;Ben 10|बेन 10;Dragon Ball Z|ड्रैगन बॉल ज़ेड;Courage the Cowardly Dog|करेज द कायरली डॉग;Scooby-Doo|स्कूबी-डू;Mr. Bean Animated|मिस्टर बीन एनिमेटेड;Roll No. 21|रोल नंबर 21;Perman|पर्मन;Ninja Hattori|निंजा हटोरी;Kiteretsu|कितरेत्सु;Oswald|ऑसवाल्ड;Powerpuff Girls|पावरपफ गर्ल्स;Dora the Explorer|डोरा द एक्सप्लोरर"),
+    "ANIME": ("एनीमे", "One Piece|वन पीस;Naruto|नारुतो;Dragon Ball|ड्रैगन बॉल;Bleach|ब्लीच;Demon Slayer|डेमन स्लेयर;Jujutsu Kaisen|जुजुत्सु काइसेन;My Hero Academia|माय हीरो एकेडेमिया;Attack on Titan|अटैक ऑन टाइटन;Death Note|डेथ नोट;Haikyuu!!|हाइक्यू!!;One Punch Man|वन पंच मैन;Black Clover|ब्लैक क्लोवर;Pokémon|पोकेमॉन;Spy x Family|स्पाई x फैमिली;Chainsaw Man|चेनसॉ मैन;Solo Leveling|सोलो लेवलिंग;Fullmetal Alchemist|फुलमेटल अल्केमिस्ट;Hunter x Hunter|हंटर x हंटर;Tokyo Ghoul|टोक्यो घोल;Dr. Stone|डॉ. स्टोन"),
+    "SINGERS - INDIAN": ("भारतीय गायक", "Arijit Singh|अरिजीत सिंह;Shreya Ghoshal|श्रेया घोषाल;Sonu Nigam|सोनू निगम;KK|केके;A.R. Rahman|ए.आर. रहमान;Udit Narayan|उदित नारायण;Kumar Sanu|कुमार सानू;Shaan|शान;Sunidhi Chauhan|सुनिधि चौहान;Alka Yagnik|अलका याज्ञनिक;Lata Mangeshkar|लता मंगेशकर;Kishore Kumar|किशोर कुमार;Mohammed Rafi|मोहम्मद रफ़ी;Mukesh|मुकेश;Badshah|बादशाह;Yo Yo Honey Singh|यो यो हनी सिंह;Neha Kakkar|नेहा कक्कड़;Jubin Nautiyal|जुबिन नौटियाल;Atif Aslam|आतिफ असलम;Diljit Dosanjh|दिलजीत दोसांझ"),
+    "MUSIC - BOLLYWOOD": ("बॉलीवुड संगीत", "Tum Hi Ho|तुम ही हो;Kal Ho Naa Ho|कल हो ना हो;Chaiyya Chaiyya|छैयाँ छैयाँ;Kesariya|केसरिया;Apna Bana Le|अपना बना ले;Tujh Mein Rab Dikhta Hai|तुझ में रब दिखता है;Pehla Nasha|पहला नशा;Kun Faya Kun|कुन फ़या कुन;Agar Tum Saath Ho|अगर तुम साथ हो;Kabira|कबिरा;Aaj Ki Raat|आज की रात;Galliyan|गलियाँ;Tera Ban Jaunga|तेरा बन जाऊँगा;Ilahi|इलाही;Dilliwali Girlfriend|दिलवाली गर्लफ्रेंड;Badtameez Dil|बदतमीज़ दिल;Tum Se Hi|तुम से ही;Zara Zara|ज़रा ज़रा;Gerua|गेरुआ;What Jhumka?|व्हाट झुमका?"),
+    "YOUTUBERS": ("यूट्यूबर्स", "CarryMinati|कैरीमिनाटी;Bhuvan Bam|भुवन बाम;Ashish Chanchlani|आशीष चंचलानी;Amit Bhadana|अमित भड़ाना;Technical Guruji|टेक्निकल गुरुजी;Sandeep Maheshwari|संदीप माहेश्वरी;Dhruv Rathee|ध्रुव राठी;Flying Beast|फ्लाइंग बीस्ट;Triggered Insaan|ट्रिगर्ड इंसान;BB Ki Vines|बीबी की वाइन्स;Round2hell|राउंड2हेल;Slayy Point|स्ले पॉइंट;Harsh Beniwal|हर्ष बेनीवाल;Be YouNick|बी यू निक;Tanmay Bhat|तनमय भट्ट;MostlySane|मोस्टलीसेन;Zakir Khan|ज़ाकिर खान;Mumbiker Nikhil|मुंबईकर निखिल;Mythpat|मिथपट;Tech Burner|टेक बर्नर"),
+    "INFLUENCERS": ("इन्फ्लुएंसर्स", "Elvish Yadav|एल्विश यादव;Raj Shamani|राज शमानी;Kusha Kapila|कुशा कपिला;Komal Pandey|कोमल पांडे;Anushka Rathod|अनुष्का राठौड़;Masoom Minawala|मसूम मीनावाला;Dolly Singh|डॉली सिंह;Aashna Shroff|आशना श्रॉफ;Niharika NM|निहारिका एनएम;Anunay Sood|अनुनय सूद;Mrunal Panchal|मृणाल पांचाल;Avneet Kaur|अवनीत कौर;Jannat Zubair|जन्नत ज़ुबैर;Riyaz Aly|रियाज़ अली;Ashika Bhatia|आशिका भाटिया;Sakshi Chopra|साक्षी चोपड़ा;Anushka Sen|अनुष्का सेन;Ashi Khanna|आशी खन्ना;Faisal Khan|फ़ैज़ल खान;Mr Faisu|मिस्टर फ़ैज़ू"),
+    "INDIAN FESTIVALS": ("भारतीय त्योहार", "Diwali|दिवाली;Holi|होली;Navratri|नवरात्रि;Dussehra|दशहरा;Eid|ईद;Raksha Bandhan|रक्षा बंधन;Janmashtami|जन्माष्टमी;Ganesh Chaturthi|गणेश चतुर्थी;Durga Puja|दुर्गा पूजा;Pongal|पोंगल;Onam|ओणम;Baisakhi|बैसाखी;Makar Sankranti|मकर संक्रांति;Lohri|लोहड़ी;Christmas|क्रिसमस;Gurpurab|गुरुपर्व;Bihu|बिहू;Ugadi|उगादी;Gudi Padwa|गुड़ी पड़वा;Chhath Puja|छठ पूजा"),
+    "INDIAN CITIES": ("भारतीय शहर", "Mumbai|मुंबई;Delhi|दिल्ली;Bengaluru|बेंगलुरु;Chennai|चेन्नई;Kolkata|कोलकाता;Hyderabad|हैदराबाद;Pune|पुणे;Ahmedabad|अहमदाबाद;Jaipur|जयपुर;Surat|सूरत;Lucknow|लखनऊ;Chandigarh|चंडीगढ़;Patna|पटना;Bhopal|भोपाल;Indore|इंदौर;Varanasi|वाराणसी;Amritsar|अमृतसर;Kochi|कोच्चि;Goa|गोवा;Srinagar|श्रीनगर"),
+    "INDIAN STATES": ("भारतीय राज्य", "Maharashtra|महाराष्ट्र;Gujarat|गुजरात;Rajasthan|राजस्थान;Punjab|पंजाब;Haryana|हरियाणा;Uttar Pradesh|उत्तर प्रदेश;Bihar|बिहार;West Bengal|पश्चिम बंगाल;Tamil Nadu|तमिलनाडु;Kerala|केरल;Karnataka|कर्नाटक;Telangana|तेलंगाना;Andhra Pradesh|आंध्र प्रदेश;Odisha|ओडिशा;Assam|असम;Goa|गोवा;Madhya Pradesh|मध्य प्रदेश;Chhattisgarh|छत्तीसगढ़;Jharkhand|झारखंड;Uttarakhand|उत्तराखंड"),
+    "INDIAN LANDMARKS": ("भारतीय स्थल", "Taj Mahal|ताजमहल;India Gate|इंडिया गेट;Red Fort|लाल किला;Gateway of India|गेटवे ऑफ इंडिया;Qutub Minar|क़ुतुब मीनार;Charminar|चारमीनार;Golden Temple|स्वर्ण मंदिर;Hawa Mahal|हवा महल;Mysore Palace|मैसूर पैलेस;Victoria Memorial|विक्टोरिया मेमोरियल;Lotus Temple|लोटस टेंपल;Bandra-Worli Sea Link|बांद्रा-वर्ली सी लिंक;Howrah Bridge|हावड़ा ब्रिज;Sanchi Stupa|सांची स्तूप;Ajanta Caves|अजंता की गुफाएँ;Ellora Caves|एलोरा की गुफाएँ;Konark Temple|कोणार्क मंदिर;Meenakshi Temple|मीनाक्षी मंदिर;Statue of Unity|स्टैच्यू ऑफ यूनिटी;Amer Fort|आमेर किला"),
+    "INDIAN BRANDS": ("भारतीय ब्रांड", "Tata|टाटा;Reliance|रिलायंस;Amul|अमूल;Parle-G|पार्ले-जी;Britannia|ब्रिटानिया;Thums Up|थम्प्स अप;Limca|लिम्का;Asian Paints|एशियन पेंट्स;Havells|हैवेल्स;Bajaj|बजाज;Mahindra|महिंद्रा;Hero|हीरो;TVS|टीवीएस;Airtel|एयरटेल;Jio|जियो;Haldiram's|हल्दीराम्स;Dabur|डाबर;Patanjali|पतंजलि;Nandini|नंदिनी;Paper Boat|पेपर बोट"),
+    "GLOBAL BRANDS": ("अंतरराष्ट्रीय ब्रांड", "Apple|ऐप्पल;Samsung|सैमसंग;Google|गूगल;Microsoft|माइक्रोसॉफ्ट;Amazon|अमेज़न;Nike|नाइकी;Adidas|एडिडास;Coca-Cola|कोका-कोला;Pepsi|पेप्सी;McDonald's|मैकडॉनल्ड्स;KFC|केएफसी;Starbucks|स्टारबक्स;Netflix|नेटफ्लिक्स;Sony|सोनी;LG|एलजी;BMW|बीएमडब्ल्यू;Mercedes-Benz|मर्सिडीज-बेंज़;Toyota|टोयोटा;Lego|लेगो;Spotify|स्पॉटिफ़ाई"),
+    "APPS": ("ऐप्स", "WhatsApp|व्हाट्सऐप;Instagram|इंस्टाग्राम;YouTube|यूट्यूब;Facebook|फेसबुक;Snapchat|स्नैपचैट;Telegram|टेलीग्राम;Google Maps|गूगल मैप्स;Gmail|जीमेल;Google Pay|गूगल पे;PhonePe|फोनपे;Paytm|पेटीएम;Spotify|स्पॉटिफ़ाई;Netflix|नेटफ्लिक्स;Amazon|अमेज़न;Flipkart|फ्लिपकार्ट;Swiggy|स्विगी;Zomato|ज़ोमैटो;Uber|उबर;Ola|ओला;Truecaller|ट्रूकॉलर"),
+    "TECHNOLOGY": ("प्रौद्योगिकी", "Smartphone|स्मार्टफ़ोन;Laptop|लैपटॉप;Computer|कंप्यूटर;Tablet|टैबलेट;Keyboard|कीबोर्ड;Mouse|माउस;Camera|कैमरा;Headphones|हेडफ़ोन;Earbuds|ईयरबड्स;Smartwatch|स्मार्टवॉच;Drone|ड्रोन;Robot|रोबोट;AI|एआई;Internet|इंटरनेट;Wi-Fi|वाई-फ़ाई;Bluetooth|ब्लूटूथ;Charger|चार्जर;Power Bank|पावर बैंक;Printer|प्रिंटर;Projector|प्रोजेक्टर"),
+    "GAMES": ("गेम्स", "Minecraft|माइनक्राफ्ट;GTA V|जीटीए V;PUBG|पबजी;BGMI|बीजीएमआई;Free Fire|फ्री फायर;Among Us|अमंग अस;Call of Duty|कॉल ऑफ ड्यूटी;FIFA|फीफा;Subway Surfers|सबवे सर्फर्स;Candy Crush|कैंडी क्रश;Clash of Clans|क्लैश ऑफ क्लैन्स;Temple Run|टेंपल रन;Pokémon GO|पोकेमॉन गो;Asphalt|अस्फाल्ट;Ludo|लूडो;Carrom|कैरम;Chess|शतरंज;8 Ball Pool|8 बॉल पूल;Roblox|रोब्लॉक्स;Fortnite|फोर्टनाइट"),
+    "MARVEL": ("मार्वल", "Iron Man|आयरन मैन;Captain America|कैप्टन अमेरिका;Thor|थॉर;Hulk|हल्क;Black Widow|ब्लैक विडो;Spider-Man|स्पाइडर-मैन;Doctor Strange|डॉक्टर स्ट्रेंज;Black Panther|ब्लैक पैंथर;Ant-Man|एंट-मैन;Captain Marvel|कैप्टन मार्वल;Hawkeye|हॉकआई;Loki|लोकी;Thanos|थैनोस;Wanda|वांडा;Vision|विज़न;Deadpool|डेडपूल;Wolverine|वूल्वरिन;Guardians of the Galaxy|गार्डियंस ऑफ़ द गैलेक्सी;Avengers|एवेंजर्स;Rocket Raccoon|रॉकेट रैकून"),
+    "DC": ("डीसी", "Batman|बैटमैन;Superman|सुपरमैन;Wonder Woman|वंडर वुमन;Aquaman|एक्वामैन;Flash|द फ़्लैश;Green Lantern|ग्रीन लैंटर्न;Cyborg|साइबोर्ग;Joker|जोकर;Harley Quinn|हार्ले क्विन;Catwoman|कैटवूमन;Robin|रॉबिन;Lex Luthor|लेक्स लूथर;Shazam|शाज़म;Black Adam|ब्लैक एडम;Darkseid|डार्कसाइड;Peacemaker|पीसमेकर;Penguin|पेंगुइन;Riddler|रिडलर;Commissioner Gordon|कमिश्नर गॉर्डन;Supergirl|सुपरगर्ल"),
+    "HARRY POTTER": ("हैरी पॉटर", "Harry Potter|हैरी पॉटर;Hermione Granger|हर्माइनी ग्रेंजर;Ron Weasley|रॉन वीस्ली;Dumbledore|डंबलडोर;Snape|स्नेप;Voldemort|वोल्डेमॉर्ट;Hagrid|हैग्रिड;Draco Malfoy|ड्रेको मालफॉय;Sirius Black|सीरियस ब्लैक;Dobby|डॉबी;Hedwig|हेडविग;Ginny Weasley|गिन्नी वीस्ली;Neville Longbottom|नेविल लॉन्गबॉटम;Luna Lovegood|लूना लवगुड;McGonagall|मैकगोनागल;Hogwarts|हॉगवर्ट्स;Gryffindor|ग्रिफ़िंडोर;Slytherin|स्लीथरिन;Quidditch|क्विडिच;Azkaban|अज़्काबान"),
+    "INDIAN MYTHOLOGY": ("भारतीय पौराणिक कथाएँ", "Ram|राम;Sita|सीता;Lakshman|लक्ष्मण;Hanuman|हनुमान;Krishna|कृष्ण;Radha|राधा;Arjun|अर्जुन;Bheem|भीम;Draupadi|द्रौपदी;Shiv|शिव;Parvati|पार्वती;Ganesh|गणेश;Kartikeya|कार्तिकेय;Vishnu|विष्णु;Lakshmi|लक्ष्मी;Saraswati|सरस्वती;Durga|दुर्गा;Kali|काली;Indra|इंद्र;Narad|नारद;Garuda|गरुड़"),
+    "FAMOUS INDIANS": ("प्रसिद्ध भारतीय", "Mahatma Gandhi|महात्मा गांधी;Jawaharlal Nehru|जवाहरलाल नेहरू;Sardar Patel|सरदार पटेल;APJ Abdul Kalam|ए.पी.जे. अब्दुल कलाम;Bhagat Singh|भगत सिंह;Subhas Chandra Bose|सुभाष चंद्र बोस;Rabindranath Tagore|रवींद्रनाथ टैगोर;Swami Vivekananda|स्वामी विवेकानंद;Mother Teresa|मदर टेरेसा;Rani Lakshmibai|रानी लक्ष्मीबाई;Dr. B.R. Ambedkar|डॉ. बी.आर. अंबेडकर;C.V. Raman|सी.वी. रमन;Homi Bhabha|होमी भाभा;Vikram Sarabhai|विक्रम साराभाई;Srinivasa Ramanujan|श्रीनिवास रामानुजन;Ratan Tata|रतन टाटा;Dhirubhai Ambani|धीरूभाई अंबानी;Indra Nooyi|इंद्रा नूयी;Azim Premji|अज़ीम प्रेमजी;M.S. Subbulakshmi|एम.एस. सुब्बुलक्ष्मी"),
+    "POLITICIANS": ("राजनेता", "Narendra Modi|नरेंद्र मोदी;Rahul Gandhi|राहुल गांधी;Amit Shah|अमित शाह;Arvind Kejriwal|अरविंद केजरीवाल;Yogi Adityanath|योगी आदित्यनाथ;Mamata Banerjee|ममता बनर्जी;Akhilesh Yadav|अखिलेश यादव;Nitish Kumar|नीतीश कुमार;Sharad Pawar|शरद पवार;Nirmala Sitharaman|निर्मला सीतारमण;S. Jaishankar|एस. जयशंकर;Rajnath Singh|राजनाथ सिंह;Smriti Irani|स्मृति ईरानी;M.K. Stalin|एम.के. स्टालिन;Uddhav Thackeray|उद्धव ठाकरे;Devendra Fadnavis|देवेंद्र फडणवीस;Mayawati|मायावती;Naveen Patnaik|नवीन पटनायक;Hemant Soren|हेमंत सोरेन;K. Chandrashekar Rao|के. चंद्रशेखर राव"),
+    "BUSINESS PEOPLE": ("व्यवसायी", "Ratan Tata|रतन टाटा;Mukesh Ambani|मुकेश अंबानी;Gautam Adani|गौतम अडानी;Narayana Murthy|नारायण मूर्ति;Azim Premji|अज़ीम प्रेमजी;Anand Mahindra|आनंद महिंद्रा;Shiv Nadar|शिव नादर;Kumar Mangalam Birla|कुमार मंगलम बिड़ला;Sanjeev Bikhchandani|संजीव बिखचंदानी;Vijay Shekhar Sharma|विजय शेखर शर्मा;Falguni Nayar|फाल्गुनी नायर;Kiran Mazumdar-Shaw|किरण मजूमदार-शॉ;Bhavish Aggarwal|भाविश अग्रवाल;Deepinder Goyal|दीपिंदर गोयल;Ritesh Agarwal|रितेश अग्रवाल;Byju Raveendran|बायजू रवींद्रन;Dhirubhai Ambani|धीरूभाई अंबानी;Sunil Bharti Mittal|सुनील भारती मित्तल;Pawan Munjal|पवन मुंजाल;Rahul Bajaj|राहुल बजाज"),
+    "PROFESSIONS": ("पेशे", "Doctor|डॉक्टर;Engineer|इंजीनियर;Teacher|शिक्षक;Lawyer|वकील;Police Officer|पुलिस अधिकारी;IAS Officer|आईएएस अधिकारी;Pilot|पायलट;Chef|रसोइया;Farmer|किसान;Actor|अभिनेता;Singer|गायक;Journalist|पत्रकार;Scientist|वैज्ञानिक;Architect|वास्तुकार;Photographer|फ़ोटोग्राफ़र;Driver|चालक;Soldier|सैनिक;Nurse|नर्स;Dentist|दंत चिकित्सक;Accountant|लेखाकार"),
+    "EDUCATION": ("शिक्षा", "School|स्कूल;College|कॉलेज;University|विश्वविद्यालय;Classroom|कक्षा;Exam|परीक्षा;Homework|गृहकार्य;Teacher|शिक्षक;Student|छात्र;Principal|प्रधानाचार्य;Blackboard|श्यामपट्ट;Notebook|कॉपी;Pencil|पेंसिल;Eraser|रबर;Ruler|स्केल;Backpack|स्कूल बैग;Library|पुस्तकालय;Laboratory|प्रयोगशाला;Tuition|ट्यूशन;Result|परिणाम;Report Card|प्रगति पत्र"),
+    "CA EXAM": ("सीए परीक्षा", "CA Foundation|सीए फाउंडेशन;CA Intermediate|सीए इंटरमीडिएट;CA Final|सीए फ़ाइनल;Accounts|अकाउंट्स;Law|लॉ;Taxation|टैक्सेशन;GST|जीएसटी;Income Tax|इनकम टैक्स;Audit|ऑडिट;Costing|कॉस्टिंग;Financial Reporting|फ़ाइनेंशियल रिपोर्टिंग;Strategic Management|स्ट्रैटेजिक मैनेजमेंट;ICAI|आईसीएआई;Attempt|प्रयास;Exemption|छूट;Passing Marks|उत्तीर्ण अंक;Aggregate|कुल अंक;Mock Test|मॉक टेस्ट;Revision|पुनरावृत्ति;Study Material|अध्ययन सामग्री"),
+    "VEHICLES": ("वाहन", "Car|कार;Bike|बाइक;Scooter|स्कूटर;Auto Rickshaw|ऑटो रिक्शा;Bus|बस;Train|ट्रेन;Metro|मेट्रो;Airplane|हवाई जहाज़;Helicopter|हेलीकॉप्टर;Truck|ट्रक;Tractor|ट्रैक्टर;Cycle|साइकिल;Boat|नाव;Ship|जहाज़;Rickshaw|रिक्शा;E-Rickshaw|ई-रिक्शा;Ambulance|एम्बुलेंस;Fire Truck|दमकल गाड़ी;Police Car|पुलिस कार;Bullet Train|बुलेट ट्रेन"),
+    "CAR BRANDS": ("कार ब्रांड", "Maruti Suzuki|मारुति सुज़ुकी;Tata Motors|टाटा मोटर्स;Mahindra|महिंद्रा;Hyundai|हुंडई;Toyota|टोयोटा;Honda|होंडा;Kia|किआ;BMW|बीएमडब्ल्यू;Mercedes-Benz|मर्सिडीज-बेंज़;Audi|ऑडी;Volkswagen|फॉक्सवैगन;Skoda|स्कोडा;MG|एमजी;Jeep|जीप;Nissan|निसान;Renault|रेनॉल्ट;Tesla|टेस्ला;Land Rover|लैंड रोवर;Porsche|पोर्श;Lamborghini|लैंबॉर्गिनी"),
+    "REGIONAL INDIAN CUISINES": ("क्षेत्रीय भारतीय व्यंजन", "Punjabi|पंजाबी;Rajasthani|राजस्थानी;Gujarati|गुजराती;Bengali|बंगाली;Maharashtrian|महाराष्ट्रीयन;South Indian|दक्षिण भारतीय;Hyderabadi|हैदराबादी;Kashmiri|कश्मीरी;Bihari|बिहारी;Awadhi|अवधी;Chettinad|चेट्टीनाड;Goan|गोअन;Kerala|केरल;Sindhi|सिंधी;Marwari|मारवाड़ी;Assamese|असमिया;Odia|ओड़िया;Konkani|कोंकणी;Naga|नागा;Himachali|हिमाचली"),
+    "NATIONS": ("देश", "India|भारत;United States|संयुक्त राज्य अमेरिका;United Kingdom|यूनाइटेड किंगडम;Canada|कनाडा;Australia|ऑस्ट्रेलिया;Japan|जापान;China|चीन;Russia|रूस;France|फ़्रांस;Germany|जर्मनी;Italy|इटली;Brazil|ब्राज़ील;Argentina|अर्जेंटीना;South Africa|दक्षिण अफ़्रीका;New Zealand|न्यूज़ीलैंड;Pakistan|पाकिस्तान;Bangladesh|बांग्लादेश;Sri Lanka|श्रीलंका;Nepal|नेपाल;Bhutan|भूटान"),
+    "GLOBAL PERSONALITIES": ("अंतरराष्ट्रीय हस्तियाँ", "Taylor Swift|टेलर स्विफ्ट;Beyoncé|बेयोंसे;Justin Bieber|जस्टिन बीबर;Selena Gomez|सेलेना गोमेज़;Tom Cruise|टॉम क्रूज़;Leonardo DiCaprio|लियोनार्डो डिकैप्रियो;Dwayne Johnson|ड्वेन जॉनसन;Keanu Reeves|कीनू रीव्स;Robert Downey Jr.|रॉबर्ट डाउनी जूनियर;Chris Hemsworth|क्रिस हेम्सवर्थ;Will Smith|विल स्मिथ;Jackie Chan|जैकी चैन;MrBeast|मिस्टरबीस्ट;Elon Musk|एलन मस्क;Mark Zuckerberg|मार्क ज़करबर्ग;Bill Gates|बिल गेट्स;Steve Jobs|स्टीव जॉब्स;Cristiano Ronaldo|क्रिस्टियानो रोनाल्डो;Lionel Messi|लियोनेल मेसी;Jeff Bezos|जेफ़ बेज़ोस"),
+    "FAMOUS SCIENTISTS": ("प्रसिद्ध वैज्ञानिक", "Albert Einstein|अल्बर्ट आइंस्टीन;Isaac Newton|आइज़ैक न्यूटन;Galileo Galilei|गैलीलियो गैलिली;Nikola Tesla|निकोला टेस्ला;Charles Darwin|चार्ल्स डार्विन;Stephen Hawking|स्टीफन हॉकिंग;Marie Curie|मैरी क्यूरी;C.V. Raman|सी.वी. रमन;APJ Abdul Kalam|ए.पी.जे. अब्दुल कलाम;Homi Bhabha|होमी भाभा;Vikram Sarabhai|विक्रम साराभाई;Srinivasa Ramanujan|श्रीनिवास रामानुजन;Satyendra Nath Bose|सत्येंद्र नाथ बोस;Aryabhata|आर्यभट्ट;Jagadish Chandra Bose|जगदीश चंद्र बोस;Meghnad Saha|मेघनाद साहा;Rakesh Sharma|राकेश शर्मा;Kalpana Chawla|कल्पना चावला;Rosalind Franklin|रोज़ालिंड फ्रैंकलिन;Alan Turing|एलन ट्यूरिंग"),
+    "HOME ITEMS": ("घर की चीज़ें", "Door|दरवाज़ा;Window|खिड़की;Fan|पंखा;Bed|बिस्तर;Sofa|सोफ़ा;Chair|कुर्सी;Table|मेज़;Curtain|परदा;Pillow|तकिया;Blanket|कंबल;Clock|घड़ी;Mirror|आईना;Lamp|लैंप;Television|टेलीविज़न;Remote|रिमोट;Bucket|बाल्टी;Broom|झाड़ू;Dustbin|कूड़ेदान;Iron|इस्त्री;Mattress|गद्दा"),
+    "KITCHEN": ("रसोई", "Plate|प्लेट;Spoon|चम्मच;Fork|कांटा;Knife|चाकू;Pan|कड़ाही;Pressure Cooker|प्रेशर कुकर;Mixer Grinder|मिक्सर ग्राइंडर;Oven|ओवन;Fridge|फ़्रिज;Kettle|केतली;Tawa|तवा;Chimney|चिमनी;Gas Stove|गैस चूल्हा;Lunch Box|टिफ़िन;Bottle|बोतल;Strainer|छलनी;Rolling Pin|बेलन;Chopping Board|काटने का बोर्ड;Lighter|लाइटर;Spice Box|मसाला डिब्बा"),
+    "FASHION": ("फ़ैशन", "Saree|साड़ी;Kurta|कुर्ता;Lehenga|लहंगा;Sherwani|शेरवानी;Salwar Kameez|सलवार कमीज़;Jeans|जींस;T-Shirt|टी-शर्ट;Jacket|जैकेट;Hoodie|हुडी;Skirt|स्कर्ट;Dress|पोशाक;Suit|सूट;Dhoti|धोती;Dupatta|दुपट्टा;Turban|पगड़ी;Shoes|जूते;Sneakers|स्नीकर्स;Sunglasses|धूप का चश्मा;Watch|घड़ी;Handbag|हैंडबैग"),
+    "FESTIVAL OBJECTS": ("त्योहारों की चीज़ें", "Diya|दीया;Rangoli|रंगोली;Firecracker|पटाखा;Rakhi|राखी;Kite|पतंग;Gulal|गुलाल;Dhol|ढोल;Garba|गरबा;Dandiya|डांडिया;Pandal|पंडाल;Eid Moon|ईद का चाँद;Christmas Tree|क्रिसमस ट्री;Easter Egg|ईस्टर एग;Lohri Fire|लोहड़ी की आग;Puja Thali|पूजा थाली;Prasad|प्रसाद;Kalash|कलश;Torans|तोरण;Mehndi|मेहंदी;Sehra|सेहरा"),
+    "NATURE": ("प्रकृति", "Mountain|पहाड़;River|नदी;Lake|झील;Waterfall|झरना;Forest|जंगल;Desert|रेगिस्तान;Ocean|महासागर;Beach|समुद्र तट;Island|द्वीप;Volcano|ज्वालामुखी;Glacier|हिमनद;Rainbow|इंद्रधनुष;Sunset|सूर्यास्त;Sunrise|सूर्योदय;Tree|पेड़;Flower|फूल;Grass|घास;Cloud|बादल;Rain|बारिश;Snow|बर्फ़"),
+    "WEATHER": ("मौसम", "Rain|बारिश;Thunder|गरज;Lightning|बिजली;Cloud|बादल;Wind|हवा;Storm|तूफ़ान;Fog|कोहरा;Snow|बर्फ़बारी;Hail|ओले;Heatwave|लू;Humidity|नमी;Cyclone|चक्रवात;Drizzle|बूंदाबांदी;Rainbow|इंद्रधनुष;Sunshine|धूप;Cold Wave|शीत लहर;Monsoon|मानसून;Drought|सूखा;Flood|बाढ़;Temperature|तापमान"),
+    "SPACE": ("अंतरिक्ष", "Sun|सूरज;Moon|चाँद;Earth|पृथ्वी;Mars|मंगल;Jupiter|बृहस्पति;Saturn|शनि;Venus|शुक्र;Mercury|बुध;Neptune|वरुण;Pluto|प्लूटो;Star|तारा;Galaxy|आकाशगंगा;Rocket|रॉकेट;Astronaut|अंतरिक्ष यात्री;Satellite|उपग्रह;Black Hole|ब्लैक होल;Eclipse|ग्रहण;Comet|धूमकेतु;Asteroid|क्षुद्रग्रह;Space Station|अंतरिक्ष स्टेशन"),
+    "PARTY": ("पार्टी", "Birthday|जन्मदिन;Wedding|शादी;Cake|केक;Balloon|गुब्बारा;Confetti|कंफ़ेटी;DJ|डीजे;Dance|नृत्य;Music|संगीत;Gift|उपहार;Invitation|निमंत्रण;Decoration|सजावट;Candle|मोमबत्ती;Selfie|सेल्फ़ी;Photobooth|फ़ोटोबूथ;Playlist|प्लेलिस्ट;Game|खेल;Friends|दोस्त;Family|परिवार;Surprise|सरप्राइज़;Celebration|जश्न"),
+    "EMOTIONS": ("भावनाएँ", "Happy|खुश;Sad|उदास;Angry|गुस्सा;Scared|डरा हुआ;Excited|उत्साहित;Bored|ऊबा हुआ;Confused|उलझन में;Jealous|ईर्ष्यालु;Proud|गर्वित;Embarrassed|शर्मिंदा;Nervous|घबराया हुआ;Relaxed|आराम से;Surprised|हैरान;Lonely|अकेला;Hopeful|आशावान;Tired|थका हुआ;Loving|प्यार भरा;Annoyed|परेशान;Curious|जिज्ञासु;Brave|बहादुर"),
 }
 
-# Keep the existing game interface: game_logic can still randomly choose an entry.
 WORD_DATABASE = [
     {
-        "word": word_en,
+        "word": word,
         "word_hi": word_hi,
-        "category": category_en,
+        "category": category,
         "category_hi": category_hi,
     }
-    for category_en, (category_hi, entries) in CATEGORY_DATA.items()
-    for word_en, word_hi in entries
+    for category, (category_hi, words) in CATEGORY_DATA.items()
+    for word, word_hi in (pair.split("|", 1) for pair in words.split(";"))
 ]
 
-# 30 categories × 10 words = 300 curated bilingual entries.
+CATEGORY_COUNT = len(CATEGORY_DATA)
+WORD_COUNT = len(WORD_DATABASE)
