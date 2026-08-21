@@ -60,11 +60,27 @@ class RoundedButton(Button):
         kwargs.setdefault("color", COLORS["text"])
         kwargs.setdefault("bold", True)
         kwargs.setdefault("font_size", "18sp")
+        kwargs.setdefault("halign", "center")
+        kwargs.setdefault("valign", "middle")
+        kwargs.setdefault("padding", [dp(18), dp(14)])
         self.bg_color = bg_color or COLORS["card2"]
         self.border_color = border_color or COLORS["accent"]
         self.radius = dp(radius)
         super().__init__(**kwargs)
-        self.bind(pos=self._draw, size=self._draw, state=self._draw)
+        self.bind(pos=self._draw, size=self._on_size, state=self._draw)
+        self._on_size()
+        self._draw()
+
+    def _on_size(self, *_):
+        # Button text otherwise keeps its natural width and can overflow the
+        # reveal card for long words/categories. Constraining text_size makes
+        # Kivy wrap it inside the pill/card on every screen size.
+        horizontal = dp(36)
+        vertical = dp(28)
+        self.text_size = (
+            max(0, self.width - horizontal),
+            max(0, self.height - vertical),
+        )
         self._draw()
 
     def _draw(self, *_):
