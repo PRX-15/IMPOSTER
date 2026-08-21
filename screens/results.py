@@ -24,8 +24,14 @@ class ResultsScreen(Screen):
         )
 
     def _build_vote_results(self, players, totals):
+        # Keep this entire section exactly the same overall size as the old
+        # single-column layout. Only the arrangement inside it changes.
         player_count = len(players)
-        results_area = BoxLayout(orientation="vertical", spacing=dp(2))
+        results_area = BoxLayout(
+            orientation="vertical",
+            spacing=dp(2),
+            size_hint_y=.2,
+        )
         results_area.add_widget(
             NeonLabel(
                 text="COMPLETE VOTE RESULTS",
@@ -38,13 +44,13 @@ class ResultsScreen(Screen):
 
         player_results = BoxLayout(orientation="vertical", spacing=dp(2), size_hint_y=1)
 
-        # 3-5 players: preserve the existing single-column result layout.
+        # 3-5 players: same single-column layout as before.
         if player_count <= 5:
             for idx, name in enumerate(players):
                 player_results.add_widget(self._result_label(name, totals[idx]))
         else:
             # 6/8/10 players: two equal columns.
-            # 7/9 players: equal columns plus the final player centered below.
+            # 7/9 players: two equal columns plus the final player centered below.
             paired_count = player_count if player_count % 2 == 0 else player_count - 1
             rows = paired_count // 2
             has_centered_player = player_count % 2 == 1
@@ -98,8 +104,6 @@ class ResultsScreen(Screen):
         self.root.add_widget(NeonLabel(text=f"THE IMPOSTER WAS\n{imp.upper()}", font_size="25sp", bold=True, size_hint_y=.18))
         self.root.add_widget(NeonLabel(text=f"MOST VOTES\n{voted}", font_size="19sp", color=COLORS["muted"], size_hint_y=.13))
 
-        # Keep the normal Kivy font for English UI and apply the Android
-        # Devanagari font only to the Hindi strings.
         self.root.add_widget(NeonLabel(
             markup=True,
             text=(
@@ -114,9 +118,7 @@ class ResultsScreen(Screen):
             size_hint_y=.25,
         ))
 
-        self.root.add_widget(
-            self._build_vote_results(s.players, totals)
-        )
+        self.root.add_widget(self._build_vote_results(s.players, totals))
 
         again = RoundedButton(text="PLAY AGAIN", size_hint_y=None, height=dp(58), bg_color=COLORS["primary"])
         again.bind(on_release=self.again)
