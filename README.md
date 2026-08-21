@@ -28,7 +28,7 @@ No KivyMD or network services are required.
 
 ## How It Works
 
-- 👥 **3–5 players** play together on one phone.
+- 👥 **3–10 players** play together on one phone.
 - 🎭 At the start of each round, **one player is secretly chosen as the Imposter**.
 - 🕵️ **Everyone except the Imposter receives the same secret word and category.** The Imposter sees only the category.
 - 📱 Pass the phone around so each player can **privately view their role**.
