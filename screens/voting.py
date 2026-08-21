@@ -23,11 +23,22 @@ class VotingScreen(Screen):
         self.root.add_widget(NeonLabel(text="Who do you think is the Imposter?", font_size="15sp", color=COLORS["muted"], size_hint_y=None, height=dp(30)))
 
         self.vote_buttons = []
+        players_grid = BoxLayout(orientation="horizontal", spacing=dp(10), size_hint_y=1)
+        left_column = BoxLayout(orientation="vertical", spacing=dp(8))
+        right_column = BoxLayout(orientation="vertical", spacing=dp(8))
+        players_grid.add_widget(left_column)
+        players_grid.add_widget(right_column)
+
         for idx, name in enumerate(self.state.players):
-            b = RoundedButton(text=name.upper(), size_hint_y=None, height=dp(42), bg_color=COLORS["card"], font_size="15sp")
+            b = RoundedButton(text=name.upper(), size_hint_y=1, bg_color=COLORS["card"], font_size="14sp")
             b.bind(on_release=lambda btn, n=idx: self.select(n))
             self.vote_buttons.append(b)
-            self.root.add_widget(b)
+            if idx < 5:
+                left_column.add_widget(b)
+            else:
+                right_column.add_widget(b)
+
+        self.root.add_widget(players_grid)
 
         self.confirm = RoundedButton(text="CONFIRM VOTE", size_hint_y=None, height=dp(50), bg_color=COLORS["primary"], disabled=True, opacity=.45)
         self.confirm.bind(on_release=self.confirm_vote)
