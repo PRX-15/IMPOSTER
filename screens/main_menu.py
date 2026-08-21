@@ -1,5 +1,5 @@
 from kivy.metrics import dp
-from kivy.uix.screenmanager import Screen
+from kivy.uix.screenmanager import Screen, FadeTransition
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
@@ -8,7 +8,6 @@ from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, RoundedRectangle, Ellipse
 
 from game.game_logic import MAX_PLAYERS
-from screens.transitions import ContainerTransformTransition
 from .common import COLORS, NeonLabel, RoundedButton, asset_path
 
 
@@ -118,5 +117,7 @@ class MainMenuScreen(Screen):
     def play(self, *_):
         self.state.start_round([row.player_name for row in self.rows])
         reveal = self.manager.get_screen("reveal")
-        self.manager.transition = ContainerTransformTransition(source_widget=self.play_btn, duration=0.35)
+        # The updates branch does not contain screens.transitions, so use
+        # Kivy's built-in transition rather than importing a missing module.
+        self.manager.transition = FadeTransition(duration=0.18)
         self.manager.current = reveal.name
