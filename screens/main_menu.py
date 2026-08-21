@@ -4,6 +4,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
 from kivy.uix.textinput import TextInput
+from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, RoundedRectangle, Ellipse
 
 from game.game_logic import MAX_PLAYERS
@@ -59,17 +60,22 @@ class MainMenuScreen(Screen):
             self.orb2 = Ellipse(size=(dp(120), dp(120)))
         root.bind(pos=self._draw_bg, size=self._draw_bg)
 
-        stack = BoxLayout(orientation="vertical", spacing=dp(14), padding=[dp(26), dp(32)], size_hint=(1, 1))
-        stack.add_widget(NeonLabel(text="IMPOSTER", font_size="42sp", bold=True, size_hint_y=.18))
-        self.player_box = BoxLayout(orientation="vertical", spacing=dp(10), size_hint_y=None, height=dp(204))
-        stack.add_widget(self.player_box)
-        self.add_btn = RoundedButton(text="+ ADD PLAYER", size_hint_y=None, height=dp(56), bg_color=COLORS["card"])
+        stack = BoxLayout(orientation="vertical", spacing=dp(12), padding=[dp(26), dp(24)], size_hint=(1, 1))
+        stack.add_widget(NeonLabel(text="IMPOSTER", font_size="42sp", bold=True, size_hint_y=None, height=dp(72)))
+
+        self.player_scroll = ScrollView(size_hint_y=1, do_scroll_x=False, bar_width=dp(4))
+        self.player_box = BoxLayout(orientation="vertical", spacing=dp(10), size_hint_y=None, padding=[0, 0, 0, dp(2)])
+        self.player_box.bind(minimum_height=self.player_box.setter("height"))
+        self.player_scroll.add_widget(self.player_box)
+        stack.add_widget(self.player_scroll)
+
+        self.add_btn = RoundedButton(text="+ ADD PLAYER", size_hint_y=None, height=dp(52), bg_color=COLORS["card"])
         self.add_btn.bind(on_release=self.add_player)
         stack.add_widget(self.add_btn)
-        self.play_btn = RoundedButton(text="PLAY", size_hint_y=None, height=dp(64), bg_color=COLORS["primary"], border_color=(1, .38, .65, 1))
+        self.play_btn = RoundedButton(text="PLAY", size_hint_y=None, height=dp(60), bg_color=COLORS["primary"], border_color=(1, .38, .65, 1))
         self.play_btn.bind(on_release=self.play)
         stack.add_widget(self.play_btn)
-        stack.add_widget(NeonLabel(text="Pass the phone. Find the fake.", font_size="14sp", color=COLORS["muted"], size_hint_y=.15))
+        stack.add_widget(NeonLabel(text="Pass the phone. Find the fake.", font_size="14sp", color=COLORS["muted"], size_hint_y=None, height=dp(32)))
         root.add_widget(stack)
         self.add_widget(root)
         for _ in range(3):
@@ -87,6 +93,7 @@ class MainMenuScreen(Screen):
         self.rows.append(row)
         self.player_box.add_widget(row)
         self._refresh_player_controls()
+        self.player_scroll.scroll_y = 0
 
     def remove_player(self, row):
         if len(self.rows) <= 3:
@@ -94,14 +101,12 @@ class MainMenuScreen(Screen):
         if row in self.rows:
             self.rows.remove(row)
             self.player_box.remove_widget(row)
-            row.unbind()
         for index, player_row in enumerate(self.rows, start=1):
             player_row.set_number(index)
         self._refresh_player_controls()
 
     def _refresh_player_controls(self):
         count = len(self.rows)
-        self.player_box.height = count * dp(68)
         at_max = count >= MAX_PLAYERS
         self.add_btn.opacity = 0 if at_max else 1
         self.add_btn.disabled = at_max
