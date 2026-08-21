@@ -8,7 +8,7 @@ from typing import Dict, List, Optional
 from .word_database import WORD_DATABASE
 
 MIN_PLAYERS = 3
-MAX_PLAYERS = 5
+MAX_PLAYERS = 10
 
 
 @dataclass
@@ -32,7 +32,7 @@ class GameState:
 
     def set_players(self, names: List[str]) -> None:
         if not MIN_PLAYERS <= len(names) <= MAX_PLAYERS:
-            raise ValueError("IMPOSTER supports 3 to 5 players.")
+            raise ValueError("IMPOSTER supports 3 to 10 players.")
         self.players = [name.strip() or f"Player {i + 1}" for i, name in enumerate(names)]
 
     def start_round(self, names: Optional[List[str]] = None) -> None:
