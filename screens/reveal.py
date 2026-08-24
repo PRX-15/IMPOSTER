@@ -1,7 +1,9 @@
+from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.floatlayout import FloatLayout
 from .common import COLORS, NeonLabel, RoundedButton, hindi_markup
 
 
@@ -11,6 +13,8 @@ class RevealScreen(Screen):
         self.state = state
         self.secret_visible = False
         self.hide_event = None
+        self.card_animation = None
+        self.card_original_y = 0
         self.root = BoxLayout(
             orientation="vertical",
             padding=[dp(24), dp(30)],
@@ -41,6 +45,35 @@ class RevealScreen(Screen):
             max(dp(1), self.card.height - dp(36)),
         )
 
+    def _stop_card_animation(self):
+        if self.card_animation:
+            self.card_animation.cancel(self.card)
+            self.card_animation = None
+
+    def _slide_card_up(self):
+        self._stop_card_animation()
+        self.card_original_y = self.card.y
+        self.card_animation = Animation(
+            y=self.card_original_y + dp(90),
+            duration=0.32,
+            t="out_cubic",
+        )
+        self.card_animation.bind(on_complete=self._clear_card_animation)
+        self.card_animation.start(self.card)
+
+    def _slide_card_down(self):
+        self._stop_card_animation()
+        self.card_animation = Animation(
+            y=self.card_original_y,
+            duration=0.32,
+            t="out_cubic",
+        )
+        self.card_animation.bind(on_complete=self._clear_card_animation)
+        self.card_animation.start(self.card)
+
+    def _clear_card_animation(self, *_):
+        self.card_animation = None
+
     def build_turn(self):
         self.secret_visible = False
         if self.hide_event:
@@ -66,17 +99,22 @@ class RevealScreen(Screen):
             )
         )
 
+        self.card_area = FloatLayout(size_hint_y=.52)
+        self.root.add_widget(self.card_area)
+
         self.card = RoundedButton(
             text="TAP HERE TO\nREVEAL YOUR ROLE",
             font_size="23sp",
-            size_hint_y=.52,
+            size_hint=(1, 1),
+            pos=(0, 0),
             bg_color=COLORS["card"],
             padding=[dp(20), dp(18)],
         )
         self.card.bind(size=self._update_card_text_bounds)
         self._update_card_text_bounds()
         self.card.bind(on_release=self.reveal)
-        self.root.add_widget(self.card)
+        self.card_area.add_widget(self.card)
+        self.card_original_y = self.card.y
 
         self.next_btn = RoundedButton(
             text="",
@@ -104,6 +142,7 @@ class RevealScreen(Screen):
         info = self.state.get_secret_for_player(self.state.current_reveal_index)
         self.secret_visible = True
         self.card.markup = True
+        self._slide_card_up()
         self._update_card_text_bounds()
 
         category_size = self._adaptive_size(
@@ -151,6 +190,7 @@ class RevealScreen(Screen):
         self.card.markup = False
         self.card.text = "SECRET HIDDEN"
         self.secret_visible = False
+        self._slide_card_down()
         self._update_card_text_bounds()
         self.next_btn.opacity = 1
         self.next_btn.disabled = False
