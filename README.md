@@ -4,6 +4,23 @@ IMPOSTER is an Android-first local pass-and-play multiplayer social-deduction ga
 
 > **One phone. One secret word. One Imposter. Can you find them?**
 
+## SCREENSHOTS
+
+<table>
+  <tr>
+    <td>
+      <img src="https://github.com/user-attachments/assets/c738b95a-35c3-4270-bd0f-7c8d92e191be" width="250">
+    </td>
+    <td>
+      <img src="https://github.com/user-attachments/assets/c02bda26-f2c6-464b-b1ac-26bead217cd3"  width="250">
+    </td>
+  </tr>
+</table>
+
+
+
+
+
 ## Run on Android
 
 You can use **any Python interpreter, IDE, or development environment that supports Python and Kivy**. **Pydroid 3 is recommended** for the easiest setup on Android.
