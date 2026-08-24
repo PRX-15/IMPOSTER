@@ -50,6 +50,13 @@ class RevealScreen(Screen):
             return
         self.card_shell_bg.pos = self.card_shell.pos
         self.card_shell_bg.size = self.card_shell.size
+        self.card_shell_border.rounded_rectangle = [
+            self.card_shell.x,
+            self.card_shell.y,
+            self.card_shell.width,
+            self.card_shell.height,
+            dp(28),
+        ]
 
     def _stop_curtain_animation(self):
         if self.curtain_animation:
@@ -69,7 +76,7 @@ class RevealScreen(Screen):
     def _slide_curtain_down(self):
         self._stop_curtain_animation()
         self.curtain_animation = Animation(
-            y=0,
+            y=dp(1.5),
             duration=0.32,
             t="out_cubic",
         )
@@ -147,20 +154,24 @@ class RevealScreen(Screen):
         self.curtain = RoundedButton(
             text="TAP HERE TO\nREVEAL YOUR ROLE",
             font_size="23sp",
-            size_hint=(1, None),
-            height=dp(1),
-            pos=(0, 0),
+            size_hint=(None, None),
+            size=(dp(1), dp(1)),
+            pos=(dp(1.5), dp(1.5)),
             bg_color=COLORS["card"],
             border_color=(0, 0, 0, 0),
-            radius=0,
+            radius=26.5,
             padding=[dp(20), dp(18)],
         )
         self.curtain.bind(on_release=self.reveal)
         self.card_area.add_widget(self.curtain)
 
         def sync_card_geometry(*_):
-            self.curtain.width = self.card_area.width
-            self.curtain.height = self.card_area.height
+            inset = dp(1.5)
+            self.curtain.pos = (inset, inset)
+            self.curtain.size = (
+                max(dp(1), self.card_area.width - inset * 2),
+                max(dp(1), self.card_area.height - inset * 2),
+            )
             self._draw_card()
             self._update_secret_text_bounds()
 
