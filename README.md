@@ -86,4 +86,5 @@ screens/
   vote_summary.py       # Dynamic vote table and tie notice
   results.py            # Final reveal and navigation
 assets/main-menu/       # Player and pencil image assets
+assets/screenshots/      # Screenshots For README
 ```
