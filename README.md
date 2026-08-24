@@ -4,6 +4,38 @@ IMPOSTER is an Android-first local pass-and-play multiplayer social-deduction ga
 
 > **One phone. One secret word. One Imposter. Can you find them?**
 
+## SCREENSHOTS
+
+<table>
+  <tr>
+    <td>
+      <img src="assets/screenshots/ss1.jpg" width="250">
+    </td>
+    <td>
+      <img src="assets/screenshots/ss2.jpg"  width="250">
+    </td>
+    <td>
+      <img src="assets/screenshots/ss3.jpg" width="250">
+    </td>
+  </tr>
+</table>
+
+
+<table>
+  <tr>
+    <td>
+      <img src="assets/screenshots/ss4.jpg" width="250">
+    </td>
+    <td>
+      <img src="assets/screenshots/ss5.jpg"  width="250">
+    </td>
+    <td>
+      <img src="assets/screenshots/ss6.jpg" width="250">
+    </td>
+  </tr>
+</table>
+
+
 ## Run on Android
 
 You can use **any Python interpreter, IDE, or development environment that supports Python and Kivy**. **Pydroid 3 is recommended** for the easiest setup on Android.
@@ -54,4 +86,5 @@ screens/
   vote_summary.py       # Dynamic vote table and tie notice
   results.py            # Final reveal and navigation
 assets/main-menu/       # Player and pencil image assets
+assets/screenshots/      # Screenshots For README
 ```
