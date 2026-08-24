@@ -3,7 +3,7 @@ from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.stencilview import StencilView
 from .common import COLORS, NeonLabel, RoundedButton, hindi_markup
 
 
@@ -14,7 +14,6 @@ class RevealScreen(Screen):
         self.secret_visible = False
         self.hide_event = None
         self.card_animation = None
-        self.card_original_y = 0
         self.root = BoxLayout(
             orientation="vertical",
             padding=[dp(24), dp(30)],
@@ -47,29 +46,28 @@ class RevealScreen(Screen):
 
     def _stop_card_animation(self):
         if self.card_animation:
-            self.card_animation.cancel(self.card)
+            self.card_animation.cancel(self.curtain)
             self.card_animation = None
 
-    def _slide_card_up(self):
+    def _slide_curtain_up(self):
         self._stop_card_animation()
-        self.card_original_y = self.card.y
         self.card_animation = Animation(
-            y=self.card_original_y + dp(90),
+            y=self.card_area.height,
             duration=0.32,
             t="out_cubic",
         )
         self.card_animation.bind(on_complete=self._clear_card_animation)
-        self.card_animation.start(self.card)
+        self.card_animation.start(self.curtain)
 
-    def _slide_card_down(self):
+    def _slide_curtain_down(self):
         self._stop_card_animation()
         self.card_animation = Animation(
-            y=self.card_original_y,
+            y=0,
             duration=0.32,
             t="out_cubic",
         )
         self.card_animation.bind(on_complete=self._clear_card_animation)
-        self.card_animation.start(self.card)
+        self.card_animation.start(self.curtain)
 
     def _clear_card_animation(self, *_):
         self.card_animation = None
@@ -99,22 +97,40 @@ class RevealScreen(Screen):
             )
         )
 
-        self.card_area = FloatLayout(size_hint_y=.52)
+        self.card_area = StencilView(size_hint_y=.52)
         self.root.add_widget(self.card_area)
 
-        self.card = RoundedButton(
-            text="TAP HERE TO\nREVEAL YOUR ROLE",
-            font_size="23sp",
+        self.secret_card = RoundedButton(
+            text="",
             size_hint=(1, 1),
             pos=(0, 0),
             bg_color=COLORS["card"],
             padding=[dp(20), dp(18)],
+            disabled=True,
         )
-        self.card.bind(size=self._update_card_text_bounds)
-        self._update_card_text_bounds()
-        self.card.bind(on_release=self.reveal)
-        self.card_area.add_widget(self.card)
-        self.card_original_y = self.card.y
+        self.secret_card.bind(size=self._update_card_text_bounds)
+        self.card_area.add_widget(self.secret_card)
+
+        self.curtain = RoundedButton(
+            text="TAP HERE TO\nREVEAL YOUR ROLE",
+            font_size="23sp",
+            size_hint=(1, None),
+            height=0,
+            pos=(0, 0),
+            bg_color=COLORS["card"],
+            padding=[dp(20), dp(18)],
+        )
+        self.curtain.bind(on_release=self.reveal)
+        self.card_area.add_widget(self.curtain)
+        self.card = self.secret_card
+
+        def size_cards(*_):
+            self.secret_card.size = self.card_area.size
+            self.curtain.size = self.card_area.size
+            self._update_card_text_bounds()
+
+        self.card_area.bind(size=size_cards)
+        Clock.schedule_once(lambda _dt: size_cards(), 0)
 
         self.next_btn = RoundedButton(
             text="",
@@ -141,8 +157,7 @@ class RevealScreen(Screen):
 
         info = self.state.get_secret_for_player(self.state.current_reveal_index)
         self.secret_visible = True
-        self.card.markup = True
-        self._slide_card_up()
+        self.secret_card.markup = True
         self._update_card_text_bounds()
 
         category_size = self._adaptive_size(
@@ -153,7 +168,7 @@ class RevealScreen(Screen):
         )
 
         if info["is_imposter"]:
-            self.card.text = (
+            self.secret_card.text = (
                 "[size=22sp][b]YOU ARE THE IMPOSTER[/b][/size]\n\n"
                 "[size=15sp]YOUR CATEGORY[/size]\n"
                 f"[size={category_size}sp][b]{info['category']}[/b][/size]\n"
@@ -166,7 +181,7 @@ class RevealScreen(Screen):
             word_hi_size = self._adaptive_size(
                 info["word_hi"], normal=21, compact=18, minimum=15, compact_at=12, minimum_at=26
             )
-            self.card.text = (
+            self.secret_card.text = (
                 "[size=15sp]WORD[/size]\n"
                 f"[size={word_size}sp][b]{info['word']}[/b][/size]\n"
                 f"[size={word_hi_size}sp]{hindi_markup(info['word_hi'])}[/size]\n\n"
@@ -177,6 +192,8 @@ class RevealScreen(Screen):
 
         # Do not animate pos_hint inside a BoxLayout. Changing it can make the
         # reveal card appear to jump or leave text visually offset on some devices.
+        self._slide_curtain_up()
+
         self.next_btn.text = (
             "FINISH REVEAL"
             if self.state.current_reveal_index == len(self.state.players) - 1
@@ -187,10 +204,10 @@ class RevealScreen(Screen):
         self.hide_event = Clock.schedule_once(lambda dt: self.hide_secret(), 5)
 
     def hide_secret(self):
-        self.card.markup = False
-        self.card.text = "SECRET HIDDEN"
+        self.secret_card.markup = False
+        self.secret_card.text = "SECRET HIDDEN"
         self.secret_visible = False
-        self._slide_card_down()
+        self._slide_curtain_down()
         self._update_card_text_bounds()
         self.next_btn.opacity = 1
         self.next_btn.disabled = False
@@ -199,7 +216,7 @@ class RevealScreen(Screen):
         if self.hide_event:
             self.hide_event.cancel()
             self.hide_event = None
-        self.card.text = ""
+        self.secret_card.text = ""
         self.next_btn.disabled = True
         if self.state.current_reveal_index >= len(self.state.players) - 1:
             self.manager.current = "ready_vote"
