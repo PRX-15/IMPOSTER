@@ -9,16 +9,31 @@ IMPOSTER is an Android-first local pass-and-play multiplayer social-deduction ga
 <table>
   <tr>
     <td>
-      <img src="assets/screenshots/ss1" width="250">
+      <img src="assets/screenshots/ss1.jpg" width="250">
     </td>
     <td>
-      <img src="https://github.com/user-attachments/assets/c02bda26-f2c6-464b-b1ac-26bead217cd3"  width="250">
+      <img src="assets/screenshots/ss2.jpg"  width="250">
+    </td>
+    <td>
+      <img src="assets/screenshots/ss3.jpg" width="250">
     </td>
   </tr>
 </table>
 
 
-
+<table>
+  <tr>
+    <td>
+      <img src="assets/screenshots/ss4.jpg" width="250">
+    </td>
+    <td>
+      <img src="assets/screenshots/ss5.jpg"  width="250">
+    </td>
+    <td>
+      <img src="assets/screenshots/ss6.jpg" width="250">
+    </td>
+  </tr>
+</table>
 
 
 ## Run on Android
