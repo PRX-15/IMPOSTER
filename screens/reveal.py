@@ -268,6 +268,10 @@ class RevealScreen(Screen):
         if self.secret_visible:
             return
 
+        # If the previous 5-second reveal has already closed, restore the
+        # original curtain text before this curtain is sent upward again.
+        self.curtain.text = "TAP HERE TO\nREVEAL YOUR ROLE"
+
         info = self.state.get_secret_for_player(self.state.current_reveal_index)
         self.secret_visible = True
         self.secret_label.markup = True
@@ -318,8 +322,11 @@ class RevealScreen(Screen):
             return
         self.secret_visible = False
         self._stop_curtain_animation()
-        self.secret_label.markup = True
-        self.secret_label.text = "[size=22sp][b]SECRET HIDDEN[/b][/size]"
+
+        # SECRET HIDDEN is now the text on the moving curtain itself, so it
+        # slides down with the curtain instead of appearing faintly underneath.
+        self.secret_label.text = ""
+        self.curtain.text = "SECRET HIDDEN"
         self._slide_curtain_down()
         self.next_btn.opacity = 1
         self.next_btn.disabled = False
