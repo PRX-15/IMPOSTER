@@ -16,29 +16,12 @@ class ResultsScreen(Screen):
         self.build()
 
     def _result_label(self, name, votes):
-        return NeonLabel(
-            text=f"{name}: {votes}",
-            font_size="16sp",
-            color=COLORS["muted"],
-            size_hint_y=1,
-        )
+        return NeonLabel(text=f"{name}: {votes}", font_size="16sp", color=COLORS["muted"], size_hint_y=1)
 
     def _build_vote_results(self, players, totals):
         player_count = len(players)
-        results_area = BoxLayout(
-            orientation="vertical",
-            spacing=dp(2),
-            size_hint_y=.2,
-        )
-        results_area.add_widget(
-            NeonLabel(
-                text="COMPLETE VOTE RESULTS",
-                font_size="16sp",
-                color=COLORS["muted"],
-                size_hint_y=None,
-                height=dp(24),
-            )
-        )
+        results_area = BoxLayout(orientation="vertical", spacing=dp(2), size_hint_y=.2)
+        results_area.add_widget(NeonLabel(text="COMPLETE VOTE RESULTS", font_size="16sp", color=COLORS["muted"], size_hint_y=None, height=dp(24)))
         player_results = BoxLayout(orientation="vertical", spacing=dp(2), size_hint_y=1)
         if player_count <= 5:
             for idx, name in enumerate(players):
@@ -47,11 +30,7 @@ class ResultsScreen(Screen):
             paired_count = player_count if player_count % 2 == 0 else player_count - 1
             rows = paired_count // 2
             has_centered_player = player_count % 2 == 1
-            columns = BoxLayout(
-                orientation="horizontal",
-                spacing=dp(10),
-                size_hint_y=rows / (rows + 1) if has_centered_player else 1,
-            )
+            columns = BoxLayout(orientation="horizontal", spacing=dp(10), size_hint_y=rows / (rows + 1) if has_centered_player else 1)
             left_column = BoxLayout(orientation="vertical", spacing=dp(2))
             right_column = BoxLayout(orientation="vertical", spacing=dp(2))
             columns.add_widget(left_column)
@@ -82,35 +61,19 @@ class ResultsScreen(Screen):
         self.root.add_widget(NeonLabel(text=outcome, font_size="30sp", bold=True, color=COLORS["primary"], size_hint_y=.12))
         self.root.add_widget(NeonLabel(text=f"THE IMPOSTER WAS\n{imp.upper()}", font_size="25sp", bold=True, size_hint_y=.18))
         self.root.add_widget(NeonLabel(text=f"MOST VOTES\n{voted}", font_size="19sp", color=COLORS["muted"], size_hint_y=.13))
-        self.root.add_widget(NeonLabel(
-            markup=True,
-            text=(
-                "THE SECRET WORD WAS\n"
-                f"{s.selected_word.word}\n"
-                f"{hindi_markup(s.selected_word.word_hi)}\n\n"
-                "CATEGORY\n"
-                f"{s.selected_word.category}\n"
-                f"{hindi_markup(s.selected_word.category_hi)}"
-            ),
-            font_size="20sp",
-            size_hint_y=.25,
-        ))
+        self.root.add_widget(NeonLabel(markup=True, text=("THE SECRET WORD WAS\n" f"{s.selected_word.word}\n" f"{hindi_markup(s.selected_word.word_hi)}\n\n" "CATEGORY\n" f"{s.selected_word.category}\n" f"{hindi_markup(s.selected_word.category_hi)}"), font_size="20sp", size_hint_y=.25))
         self.root.add_widget(self._build_vote_results(s.players, totals))
-        again = RoundedButton(text="PLAY AGAIN", size_hint_y=None, height=dp(58), bg_color=COLORS["primary"])
-        again.bind(on_release=self.again)
-        self.root.add_widget(again)
+        self.again_btn = RoundedButton(text="PLAY AGAIN", size_hint_y=None, height=dp(58), bg_color=COLORS["primary"])
+        self.again_btn.bind(on_release=self.again)
+        self.root.add_widget(self.again_btn)
         menu = RoundedButton(text="MAIN MENU", size_hint_y=None, height=dp(52), bg_color=COLORS["card"])
         menu.bind(on_release=self.menu)
         self.root.add_widget(menu)
 
     def again(self, *_):
         self.state.start_round(self.state.players)
-        # Rebuild the existing RevealScreen before making it visible. This is
-        # necessary because ScreenManager does not recreate an already-added
-        # screen instance just because current changes back to it.
-        reveal = self.manager.get_screen("reveal")
-        reveal.build_turn()
-        self.manager.current = "reveal"
+        menu = self.manager.get_screen("menu")
+        menu.start_reveal_morph(self.again_btn)
 
     def menu(self, *_):
         self.state.reset_to_menu()
