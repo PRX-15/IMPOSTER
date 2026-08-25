@@ -151,7 +151,7 @@ class MainMenuScreen(Screen):
             self.manager.transition = NoTransition()
             self.manager.current = reveal.name
             self.manager.transition = previous_transition
-            Clock.schedule_once(lambda _dt: self._finish_morph_handoff(overlay, reveal, source_button), 0)
+            self._finish_morph_handoff(overlay, reveal, source_button)
 
         expand.bind(on_complete=finish)
         expand.start(overlay)
