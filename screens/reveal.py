@@ -3,10 +3,84 @@ from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.stencilview import StencilView
 from kivy.uix.widget import Widget
-from kivy.graphics import Color, RoundedRectangle, Line
+from kivy.uix.button import Button
+from kivy.graphics import (
+    Color,
+    Rectangle,
+    RoundedRectangle,
+    Line,
+    StencilPush,
+    StencilUse,
+    StencilUnUse,
+    StencilPop,
+)
 from .common import COLORS, NeonLabel, RoundedButton, hindi_markup
+
+
+class RoundedStencilView(Widget):
+    """A rounded viewport that clips all of its children to one card shape."""
+
+    def __init__(self, radius=28, **kwargs):
+        self.clip_radius = dp(radius)
+        super().__init__(**kwargs)
+
+        with self.canvas.before:
+            StencilPush()
+            self._stencil_mask = RoundedRectangle(
+                pos=self.pos,
+                size=self.size,
+                radius=[self.clip_radius],
+            )
+            StencilUse()
+
+        with self.canvas.after:
+            StencilUnUse()
+            self._stencil_clear = RoundedRectangle(
+                pos=self.pos,
+                size=self.size,
+                radius=[self.clip_radius],
+            )
+            StencilPop()
+
+        self.bind(pos=self._sync_stencil, size=self._sync_stencil)
+
+    def _sync_stencil(self, *_):
+        self._stencil_mask.pos = self.pos
+        self._stencil_mask.size = self.size
+        self._stencil_mask.radius = [self.clip_radius]
+        self._stencil_clear.pos = self.pos
+        self._stencil_clear.size = self.size
+        self._stencil_clear.radius = [self.clip_radius]
+
+
+class PlainCurtain(Button):
+    """A flat moving cover. No rounded corners and no second card border."""
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("background_normal", "")
+        kwargs.setdefault("background_down", "")
+        kwargs.setdefault("background_color", (0, 0, 0, 0))
+        kwargs.setdefault("color", COLORS["text"])
+        kwargs.setdefault("bold", True)
+        kwargs.setdefault("halign", "center")
+        kwargs.setdefault("valign", "middle")
+        super().__init__(**kwargs)
+
+        with self.canvas.before:
+            Color(*COLORS["card"])
+            self._background = Rectangle(pos=self.pos, size=self.size)
+
+        self.bind(pos=self._sync_background, size=self._sync_background)
+        self.bind(size=self._sync_text)
+        self._sync_text()
+
+    def _sync_background(self, *_):
+        self._background.pos = self.pos
+        self._background.size = self.size
+
+    def _sync_text(self, *_):
+        self.text_size = self.size
 
 
 class RevealScreen(Screen):
@@ -28,7 +102,6 @@ class RevealScreen(Screen):
 
     @staticmethod
     def _adaptive_size(text, normal, compact, minimum, compact_at=12, minimum_at=22):
-        """Shrink unusually long reveal words without changing normal entries."""
         longest_line = max((len(line) for line in str(text).splitlines()), default=0)
         if longest_line <= compact_at:
             return normal
@@ -45,16 +118,12 @@ class RevealScreen(Screen):
             max(dp(1), self.card_area.height - dp(36)),
         )
 
-    def _draw_card(self, *_):
-        if not hasattr(self, "card_shell"):
-            return
-        self.card_shell_bg.pos = self.card_shell.pos
-        self.card_shell_bg.size = self.card_shell.size
-        self.card_shell_border.rounded_rectangle = [
-            self.card_shell.x,
-            self.card_shell.y,
-            self.card_shell.width,
-            self.card_shell.height,
+    def _draw_card_border(self, *_):
+        self.card_border.rounded_rectangle = [
+            self.card_area.x,
+            self.card_area.y,
+            self.card_area.width,
+            self.card_area.height,
             dp(28),
         ]
 
@@ -66,9 +135,9 @@ class RevealScreen(Screen):
     def _slide_curtain_up(self):
         self._stop_curtain_animation()
         self.curtain_animation = Animation(
-            y=self.card_area.height,
-            duration=0.32,
-            t="out_cubic",
+            y=self.card_area.top,
+            duration=0.38,
+            t="in_out_cubic",
         )
         self.curtain_animation.bind(on_complete=self._clear_curtain_animation)
         self.curtain_animation.start(self.curtain)
@@ -76,9 +145,9 @@ class RevealScreen(Screen):
     def _slide_curtain_down(self):
         self._stop_curtain_animation()
         self.curtain_animation = Animation(
-            y=dp(1.5),
-            duration=0.32,
-            t="out_cubic",
+            y=self.card_area.y,
+            duration=0.38,
+            t="in_out_cubic",
         )
         self.curtain_animation.bind(on_complete=self._clear_curtain_animation)
         self.curtain_animation.start(self.curtain)
@@ -112,71 +181,50 @@ class RevealScreen(Screen):
             )
         )
 
-        # This is the one fixed card area. Everything involved in the reveal
-        # stays inside it; only the cover/curtain moves.
-        self.card_area = StencilView(size_hint_y=.52)
+        # One fixed, rounded card viewport. The secret and the moving curtain
+        # are both children of this exact card; nothing outside it is animated.
+        self.card_area = RoundedStencilView(radius=28, size_hint_y=.52)
         self.root.add_widget(self.card_area)
 
-        self.card_shell = Widget(size_hint=(1, 1))
-        with self.card_shell.canvas.before:
+        self.card_background = Widget(size_hint=(None, None))
+        with self.card_background.canvas.before:
             Color(*COLORS["card"])
-            self.card_shell_bg = RoundedRectangle(
-                pos=self.card_shell.pos,
-                size=self.card_shell.size,
-                radius=[dp(28)],
+            self.card_background_rect = Rectangle(
+                pos=self.card_background.pos,
+                size=self.card_background.size,
             )
-            Color(*COLORS["accent"])
-            self.card_shell_border = Line(
-                rounded_rectangle=[
-                    self.card_shell.x,
-                    self.card_shell.y,
-                    self.card_shell.width,
-                    self.card_shell.height,
-                    dp(28),
-                ],
-                width=dp(1.2),
-            )
-        self.card_shell.bind(pos=self._draw_card, size=self._draw_card)
-        self.card_area.add_widget(self.card_shell)
+        self.card_background.bind(pos=self._sync_card_background, size=self._sync_card_background)
+        self.card_area.add_widget(self.card_background)
 
         self.secret_label = NeonLabel(
             text="",
             markup=True,
-            size_hint=(1, 1),
+            size_hint=(None, None),
             font_size="20sp",
             color=COLORS["text"],
         )
         self.card_area.add_widget(self.secret_label)
 
-        # The actual reveal button is the curtain. It is clipped to the fixed
-        # card area, so sliding it up never changes the position of the card,
-        # next button, footer, or any surrounding layout.
-        self.curtain = RoundedButton(
+        # This is a genuinely flat curtain. The rounded viewport supplies the
+        # card corners, while this rectangle simply slides upward and is clipped.
+        self.curtain = PlainCurtain(
             text="TAP HERE TO\nREVEAL YOUR ROLE",
             font_size="23sp",
             size_hint=(None, None),
-            size=(dp(1), dp(1)),
-            pos=(dp(1.5), dp(1.5)),
-            bg_color=COLORS["card"],
-            border_color=(0, 0, 0, 0),
-            radius=26.5,
-            padding=[dp(20), dp(18)],
         )
         self.curtain.bind(on_release=self.reveal)
         self.card_area.add_widget(self.curtain)
 
-        def sync_card_geometry(*_):
-            inset = dp(1.5)
-            self.curtain.pos = (inset, inset)
-            self.curtain.size = (
-                max(dp(1), self.card_area.width - inset * 2),
-                max(dp(1), self.card_area.height - inset * 2),
-            )
-            self._draw_card()
-            self._update_secret_text_bounds()
+        # Draw one permanent border above both the secret and the curtain.
+        self.card_border_overlay = Widget(size_hint=(None, None))
+        with self.card_border_overlay.canvas:
+            Color(*COLORS["accent"])
+            self.card_border = Line(width=dp(1.2))
+        self.card_border_overlay.bind(pos=self._draw_card_border, size=self._draw_card_border)
+        self.card_area.add_widget(self.card_border_overlay)
 
-        self.card_area.bind(size=sync_card_geometry)
-        Clock.schedule_once(sync_card_geometry, 0)
+        self.card_area.bind(pos=self._sync_card_geometry, size=self._sync_card_geometry)
+        Clock.schedule_once(self._sync_card_geometry, 0)
 
         self.next_btn = RoundedButton(
             text="",
@@ -196,6 +244,25 @@ class RevealScreen(Screen):
                 size_hint_y=.15,
             )
         )
+
+    def _sync_card_background(self, *_):
+        self.card_background_rect.pos = self.card_background.pos
+        self.card_background_rect.size = self.card_background.size
+
+    def _sync_card_geometry(self, *_):
+        x, y = self.card_area.pos
+        width, height = self.card_area.size
+        self.card_background.pos = (x, y)
+        self.card_background.size = (width, height)
+        self.secret_label.pos = (x, y)
+        self.secret_label.size = (width, height)
+        self.curtain.x = x
+        self.curtain.y = y if not self.secret_visible else self.curtain.y
+        self.curtain.size = (width, height)
+        self.card_border_overlay.pos = (x, y)
+        self.card_border_overlay.size = (width, height)
+        self._draw_card_border()
+        self._update_secret_text_bounds()
 
     def reveal(self, *_):
         if self.secret_visible:
