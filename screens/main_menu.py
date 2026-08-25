@@ -1,5 +1,6 @@
+from kivy.clock import Clock
 from kivy.metrics import dp
-from kivy.uix.screenmanager import Screen, FadeTransition
+from kivy.uix.screenmanager import Screen
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
@@ -7,6 +8,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, RoundedRectangle, Ellipse
 
+from animations.screen_morph import ScreenMorph
 from game.game_logic import MAX_PLAYERS
 from .common import COLORS, NeonLabel, RoundedButton, asset_path
 
@@ -61,13 +63,11 @@ class MainMenuScreen(Screen):
 
         stack = BoxLayout(orientation="vertical", spacing=dp(12), padding=[dp(26), dp(24)], size_hint=(1, 1))
         stack.add_widget(NeonLabel(text="IMPOSTER", font_size="42sp", bold=True, size_hint_y=None, height=dp(72)))
-
         self.player_scroll = ScrollView(size_hint_y=1, do_scroll_x=False, bar_width=dp(4))
         self.player_box = BoxLayout(orientation="vertical", spacing=dp(10), size_hint_y=None, padding=[0, 0, 0, dp(2)])
         self.player_box.bind(minimum_height=self.player_box.setter("height"))
         self.player_scroll.add_widget(self.player_box)
         stack.add_widget(self.player_scroll)
-
         self.add_btn = RoundedButton(text="+ ADD PLAYER", size_hint_y=None, height=dp(52), bg_color=COLORS["card"])
         self.add_btn.bind(on_release=self.add_player)
         stack.add_widget(self.add_btn)
@@ -77,6 +77,7 @@ class MainMenuScreen(Screen):
         stack.add_widget(NeonLabel(text="Pass the phone. Find the fake.", font_size="14sp", color=COLORS["muted"], size_hint_y=None, height=dp(32)))
         root.add_widget(stack)
         self.add_widget(root)
+        self.morph = ScreenMorph(self)
         for _ in range(3):
             self.add_player()
 
@@ -115,9 +116,13 @@ class MainMenuScreen(Screen):
             row.delete_btn.opacity = 1 if can_delete else 0
 
     def play(self, *_):
+        if self.morph.running:
+            return
         self.state.start_round([row.player_name for row in self.rows])
         reveal = self.manager.get_screen("reveal")
-        # The updates branch does not contain screens.transitions, so use
-        # Kivy's built-in transition rather than importing a missing module.
-        self.manager.transition = FadeTransition(duration=0.18)
-        self.manager.current = reveal.name
+        reveal.build_turn()
+        self.morph.start(
+            self.play_btn,
+            reveal,
+            on_handoff=lambda: Clock.schedule_once(lambda _dt: reveal.start_entrance_animation(), 0),
+        )

@@ -1,6 +1,7 @@
 """Shared Kivy widgets and styling helpers."""
 from pathlib import Path
 from kivy.metrics import dp
+from kivy.properties import NumericProperty, ListProperty
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.graphics import Color, RoundedRectangle, Line
@@ -53,6 +54,13 @@ class NeonLabel(Label):
 
 
 class RoundedButton(Button):
+    # These must be Kivy properties. The morph animation changes radius and
+    # colours every frame, and plain Python attributes would not redraw the
+    # canvas while Animation is running.
+    bg_color = ListProperty(COLORS["card2"])
+    border_color = ListProperty(COLORS["accent"])
+    radius = NumericProperty(dp(28))
+
     def __init__(self, bg_color=None, border_color=None, radius=28, **kwargs):
         kwargs.setdefault("background_normal", "")
         kwargs.setdefault("background_down", "")
@@ -60,11 +68,19 @@ class RoundedButton(Button):
         kwargs.setdefault("color", COLORS["text"])
         kwargs.setdefault("bold", True)
         kwargs.setdefault("font_size", "18sp")
+        super().__init__(**kwargs)
+
         self.bg_color = bg_color or COLORS["card2"]
         self.border_color = border_color or COLORS["accent"]
         self.radius = dp(radius)
-        super().__init__(**kwargs)
-        self.bind(pos=self._draw, size=self._draw, state=self._draw)
+        self.bind(
+            pos=self._draw,
+            size=self._draw,
+            state=self._draw,
+            bg_color=self._draw,
+            border_color=self._draw,
+            radius=self._draw,
+        )
         self._draw()
 
     def _draw(self, *_):
@@ -74,4 +90,7 @@ class RoundedButton(Button):
             Color(*color)
             RoundedRectangle(pos=self.pos, size=self.size, radius=[self.radius])
             Color(*self.border_color)
-            Line(rounded_rectangle=[self.x, self.y, self.width, self.height, self.radius], width=dp(1.2))
+            Line(
+                rounded_rectangle=[self.x, self.y, self.width, self.height, self.radius],
+                width=dp(1.2),
+            )
