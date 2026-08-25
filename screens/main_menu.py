@@ -64,13 +64,11 @@ class MainMenuScreen(Screen):
 
         stack = BoxLayout(orientation="vertical", spacing=dp(12), padding=[dp(26), dp(24)], size_hint=(1, 1))
         stack.add_widget(NeonLabel(text="IMPOSTER", font_size="42sp", bold=True, size_hint_y=None, height=dp(72)))
-
         self.player_scroll = ScrollView(size_hint_y=1, do_scroll_x=False, bar_width=dp(4))
         self.player_box = BoxLayout(orientation="vertical", spacing=dp(10), size_hint_y=None, padding=[0, 0, 0, dp(2)])
         self.player_box.bind(minimum_height=self.player_box.setter("height"))
         self.player_scroll.add_widget(self.player_box)
         stack.add_widget(self.player_scroll)
-
         self.add_btn = RoundedButton(text="+ ADD PLAYER", size_hint_y=None, height=dp(52), bg_color=COLORS["card"])
         self.add_btn.bind(on_release=self.add_player)
         stack.add_widget(self.add_btn)
@@ -80,7 +78,6 @@ class MainMenuScreen(Screen):
         stack.add_widget(NeonLabel(text="Pass the phone. Find the fake.", font_size="14sp", color=COLORS["muted"], size_hint_y=None, height=dp(32)))
         root.add_widget(stack)
         self.add_widget(root)
-
         self.morph_layer = FloatLayout(size_hint=(1, 1))
         self.add_widget(self.morph_layer)
         for _ in range(3):
@@ -123,50 +120,48 @@ class MainMenuScreen(Screen):
     def play(self, *_):
         if self._transitioning:
             return
-
         self._transitioning = True
         self.play_btn.disabled = True
         self.state.start_round([row.player_name for row in self.rows])
+        self.start_reveal_morph(self.play_btn)
 
+    def start_reveal_morph(self, source_button):
+        """Run the shared button-to-reveal morph from any screen."""
+        if not source_button or not source_button.parent:
+            return
         reveal = self.manager.get_screen("reveal")
         reveal.build_turn()
-
-        start_x, start_y = self.morph_layer.to_widget(*self.play_btn.to_window(0, 0))
+        start_x, start_y = self.morph_layer.to_widget(*source_button.to_window(0, 0))
         overlay = RoundedButton(
             text="",
             size_hint=(None, None),
-            size=self.play_btn.size,
+            size=source_button.size,
             pos=(start_x, start_y),
             bg_color=COLORS["bg"],
             border_color=(1, 0.2, 0.5, 1),
-            radius=self.play_btn.radius,
+            radius=source_button.radius,
             disabled=True,
         )
         self.morph_layer.add_widget(overlay)
-        self.play_btn.opacity = 0
-
-        expand = Animation(
-            pos=(0, 0),
-            size=self.morph_layer.size,
-            radius=0,
-            duration=0.45,
-            t="out_cubic",
-        )
+        source_button.opacity = 0
+        expand = Animation(pos=(0, 0), size=self.morph_layer.size, radius=0, duration=0.45, t="out_cubic")
 
         def finish(*_):
             previous_transition = self.manager.transition
             self.manager.transition = NoTransition()
             self.manager.current = reveal.name
             self.manager.transition = previous_transition
-            Clock.schedule_once(lambda _dt: self._finish_morph_handoff(overlay, reveal), 0)
+            Clock.schedule_once(lambda _dt: self._finish_morph_handoff(overlay, reveal, source_button), 0)
 
         expand.bind(on_complete=finish)
         expand.start(overlay)
 
-    def _finish_morph_handoff(self, overlay, reveal):
+    def _finish_morph_handoff(self, overlay, reveal, source_button=None):
         if overlay.parent is self.morph_layer:
             self.morph_layer.remove_widget(overlay)
-        self.play_btn.opacity = 1
+        if source_button:
+            source_button.opacity = 1
+            source_button.disabled = False
         self.play_btn.disabled = False
         self._transitioning = False
         Clock.schedule_once(lambda _dt: reveal.start_entrance_animation(), 0)
