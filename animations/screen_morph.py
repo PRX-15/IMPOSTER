@@ -21,7 +21,6 @@ class ScreenMorph:
         self.duration = duration
         self.transition = transition
         self._running = False
-
         self.layer = FloatLayout(size_hint=(1, 1))
         screen.add_widget(self.layer)
 
@@ -29,8 +28,12 @@ class ScreenMorph:
     def running(self):
         return self._running
 
-    def start(self, source_button, target_screen):
-        """Run the morph and immediately hand off to ``target_screen`` when done."""
+    def start(self, source_button, target_screen, on_handoff=None):
+        """Run the morph and hand off to ``target_screen`` when it finishes.
+
+        ``on_handoff`` belongs to the calling screen, so target-screen-specific
+        entrance behaviour remains outside this generic animation module.
+        """
         if self._running or not source_button or not source_button.parent:
             return False
 
@@ -72,6 +75,9 @@ class ScreenMorph:
             source_button.opacity = 1
             source_button.disabled = False
             self._running = False
+
+            if on_handoff:
+                on_handoff()
 
         morph.bind(on_complete=finish)
         morph.start(overlay)
