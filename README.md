@@ -4,37 +4,18 @@ IMPOSTER is an Android-first local pass-and-play multiplayer social-deduction ga
 
 > **One phone. One secret word. One Imposter. Can you find them?**
 
-## SCREENSHOTS
+<div align="center">
 
-<table>
-  <tr>
-    <td>
-      <img src="assets/screenshots/ss1.jpg" width="250">
-    </td>
-    <td>
-      <img src="assets/screenshots/ss2.jpg"  width="250">
-    </td>
-    <td>
-      <img src="assets/screenshots/ss3.jpg" width="250">
-    </td>
-  </tr>
-</table>
+<h1><a id="screenshots"></a>Screenshots</h1>
 
+<img src="assets/screenshots/ss1.jpg" alt="Home screen" width="30%" />
+<img src="assets/screenshots/ss2.jpg" alt="Reveal screen" width="30%" />
+<img src="assets/screenshots/ss3.jpg" alt="Secret open screen" width="30%" />
+<img src="assets/screenshots/ss4.jpg" alt="Imposter screen" width="30%" />
+<img src="assets/screenshots/ss5.jpg" alt="Player Voting screen" width="30%" />
+<img src="assets/screenshots/ss6.jpg" alt="Result screen" width="30%" />
 
-<table>
-  <tr>
-    <td>
-      <img src="assets/screenshots/ss4.jpg" width="250">
-    </td>
-    <td>
-      <img src="assets/screenshots/ss5.jpg"  width="250">
-    </td>
-    <td>
-      <img src="assets/screenshots/ss6.jpg" width="250">
-    </td>
-  </tr>
-</table>
-
+</div>
 
 ## Run on Android
 
