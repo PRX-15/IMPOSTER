@@ -16,10 +16,11 @@ class VotingScreen(Screen):
     def on_pre_enter(self):
         self.build_vote()
 
-    def _make_vote_button(self, idx, name):
+    def _make_vote_button(self, idx, name, height=None):
         button = RoundedButton(
             text=name.upper(),
-            size_hint_y=1,
+            size_hint_y=None if height is not None else 1,
+            height=dp(height) if height is not None else 100,
             bg_color=COLORS["card"],
             font_size="14sp",
         )
@@ -53,16 +54,24 @@ class VotingScreen(Screen):
         )
 
         self.vote_buttons = []
+        # With 3-5 players, keep vote buttons thin instead of stretching them
+        # into the entire remaining screen. The formation remains one column.
+        thin_vote_buttons = player_count <= 5
+        vote_button_height = 46 if thin_vote_buttons else None
         players_area = BoxLayout(
             orientation="vertical",
             spacing=dp(8),
-            size_hint_y=1,
+            size_hint_y=None if thin_vote_buttons else 1,
+            height=dp(player_count * vote_button_height + max(player_count - 1, 0) * 8)
+            if thin_vote_buttons else 100,
         )
 
-        # 3-5 players: one full-width column.
+        # 3-5 players: one full-width column, using thin fixed-height buttons.
         if player_count <= 5:
             for idx, name in enumerate(self.state.players):
-                players_area.add_widget(self._make_vote_button(idx, name))
+                players_area.add_widget(
+                    self._make_vote_button(idx, name, height=vote_button_height)
+                )
 
         else:
             # 6/8/10 players split evenly between two columns.

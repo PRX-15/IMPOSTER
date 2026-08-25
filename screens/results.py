@@ -1,7 +1,10 @@
+from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.widget import Widget
+
+from animations.screen_morph import ScreenMorph
 from .common import COLORS, NeonLabel, RoundedButton, hindi_markup
 
 
@@ -11,6 +14,7 @@ class ResultsScreen(Screen):
         self.state = state
         self.root = BoxLayout(orientation="vertical", padding=[dp(22), dp(28)], spacing=dp(8))
         self.add_widget(self.root)
+        self.morph = ScreenMorph(self)
 
     def on_pre_enter(self):
         self.build()
@@ -71,9 +75,16 @@ class ResultsScreen(Screen):
         self.root.add_widget(menu)
 
     def again(self, *_):
+        if self.morph.running:
+            return
         self.state.start_round(self.state.players)
-        menu = self.manager.get_screen("menu")
-        menu.start_reveal_morph(self.again_btn)
+        reveal = self.manager.get_screen("reveal")
+        reveal.build_turn()
+        self.morph.start(
+            self.again_btn,
+            reveal,
+            on_handoff=lambda: Clock.schedule_once(lambda _dt: reveal.start_entrance_animation(), 0),
+        )
 
     def menu(self, *_):
         self.state.reset_to_menu()
