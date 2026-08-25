@@ -148,6 +148,43 @@ class RevealScreen(Screen):
     def _clear_curtain_animation(self, *_):
         self.curtain_animation = None
 
+    def _draw_card_border(self, *_):
+        self.card_border.rounded_rectangle = [
+            self.card_area.x,
+            self.card_area.y,
+            self.card_area.width,
+            self.card_area.height,
+            dp(28),
+        ]
+
+    def _stop_curtain_animation(self):
+        if self.curtain_animation:
+            self.curtain_animation.cancel(self.curtain)
+            self.curtain_animation = None
+
+    def _slide_curtain_up(self):
+        self._stop_curtain_animation()
+        self.curtain_animation = Animation(
+            y=self.card_area.top,
+            duration=0.38,
+            t="in_out_cubic",
+        )
+        self.curtain_animation.bind(on_complete=self._clear_curtain_animation)
+        self.curtain_animation.start(self.curtain)
+
+    def _slide_curtain_down(self):
+        self._stop_curtain_animation()
+        self.curtain_animation = Animation(
+            y=self.card_area.y,
+            duration=0.38,
+            t="in_out_cubic",
+        )
+        self.curtain_animation.bind(on_complete=self._clear_curtain_animation)
+        self.curtain_animation.start(self.curtain)
+
+    def _clear_curtain_animation(self, *_):
+        self.curtain_animation = None
+
     def build_turn(self):
         self._stop_curtain_animation()
         self.secret_visible = False
@@ -192,6 +229,25 @@ class RevealScreen(Screen):
         self.root.add_widget(self.next_btn)
         self.privacy_label = self._prepare_entrance_widget(EntranceLabel(text="Keep the screen private, then pass the phone.", font_size="14sp", color=COLORS["muted"], size_hint_y=.15))
         self.root.add_widget(self.privacy_label)
+
+    def _sync_card_background(self, *_):
+        self.card_background_rect.pos = self.card_background.pos
+        self.card_background_rect.size = self.card_background.size
+
+    def _sync_card_geometry(self, *_):
+        x, y = self.card_area.pos
+        width, height = self.card_area.size
+        self.card_background.pos = (x, y)
+        self.card_background.size = (width, height)
+        self.secret_label.pos = (x, y)
+        self.secret_label.size = (width, height)
+        self.curtain.x = x
+        self.curtain.y = y if not self.secret_visible else self.curtain.y
+        self.curtain.size = (width, height)
+        self.card_border_overlay.pos = (x, y)
+        self.card_border_overlay.size = (width, height)
+        self._draw_card_border()
+        self._update_secret_text_bounds()
 
     def _sync_card_background(self, *_):
         self.card_background_rect.pos = self.card_background.pos
