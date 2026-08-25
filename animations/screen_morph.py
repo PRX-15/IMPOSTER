@@ -6,6 +6,7 @@ or slide animation logic.
 """
 
 from kivy.animation import Animation
+from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.screenmanager import NoTransition
@@ -31,7 +32,9 @@ class ScreenMorph:
     def start(self, source_button, target_screen, on_handoff=None):
         """Run the morph and hand off to ``target_screen`` when it finishes.
 
-        ``on_handoff`` belongs to the calling screen, so target-screen-specific
+        The fullscreen overlay stays mounted for one render tick after the
+        ScreenManager switches screens. This prevents the old source screen
+        from flashing for a frame during the handoff. Target-screen-specific
         entrance behaviour remains outside this generic animation module.
         """
         if self._running or not source_button or not source_button.parent:
@@ -70,14 +73,16 @@ class ScreenMorph:
             manager.current = target_screen.name
             manager.transition = previous_transition
 
-            if overlay.parent is self.layer:
-                self.layer.remove_widget(overlay)
-            source_button.opacity = 1
-            source_button.disabled = False
-            self._running = False
+            def cleanup(_dt):
+                if overlay.parent is self.layer:
+                    self.layer.remove_widget(overlay)
+                source_button.opacity = 1
+                source_button.disabled = False
+                self._running = False
+                if on_handoff:
+                    on_handoff()
 
-            if on_handoff:
-                on_handoff()
+            Clock.schedule_once(cleanup, 0)
 
         morph.bind(on_complete=finish)
         morph.start(overlay)
