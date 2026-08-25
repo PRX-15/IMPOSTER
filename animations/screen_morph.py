@@ -14,7 +14,7 @@ from kivy.uix.screenmanager import NoTransition
 from screens.common import COLORS, RoundedButton
 
 
-MORPH_BORDER_COLOR = (0.35, 0.65, 1.0, 1)
+MORPH_BORDER_COLOR = (152 / 255, 36 / 255, 242 / 255, 1)
 
 
 class ScreenMorph:
