@@ -1,5 +1,7 @@
+from kivy.animation import Animation
+from kivy.clock import Clock
 from kivy.metrics import dp
-from kivy.uix.screenmanager import Screen, FadeTransition
+from kivy.uix.screenmanager import Screen, NoTransition
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
@@ -49,6 +51,7 @@ class MainMenuScreen(Screen):
         super().__init__(**kwargs)
         self.state = state
         self.rows = []
+        self._transitioning = False
         root = FloatLayout()
         with root.canvas.before:
             Color(*COLORS["bg"])
@@ -77,6 +80,9 @@ class MainMenuScreen(Screen):
         stack.add_widget(NeonLabel(text="Pass the phone. Find the fake.", font_size="14sp", color=COLORS["muted"], size_hint_y=None, height=dp(32)))
         root.add_widget(stack)
         self.add_widget(root)
+
+        self.morph_layer = FloatLayout(size_hint=(1, 1))
+        self.add_widget(self.morph_layer)
         for _ in range(3):
             self.add_player()
 
@@ -115,9 +121,52 @@ class MainMenuScreen(Screen):
             row.delete_btn.opacity = 1 if can_delete else 0
 
     def play(self, *_):
+        if self._transitioning:
+            return
+
+        self._transitioning = True
+        self.play_btn.disabled = True
         self.state.start_round([row.player_name for row in self.rows])
+
         reveal = self.manager.get_screen("reveal")
-        # The updates branch does not contain screens.transitions, so use
-        # Kivy's built-in transition rather than importing a missing module.
-        self.manager.transition = FadeTransition(duration=0.18)
-        self.manager.current = reveal.name
+        reveal.build_turn()
+
+        start_x, start_y = self.morph_layer.to_widget(*self.play_btn.to_window(0, 0))
+        overlay = RoundedButton(
+            text="",
+            size_hint=(None, None),
+            size=self.play_btn.size,
+            pos=(start_x, start_y),
+            bg_color=COLORS["bg"],
+            border_color=(1, 0.2, 0.5, 1),
+            radius=self.play_btn.radius,
+            disabled=True,
+        )
+        self.morph_layer.add_widget(overlay)
+        self.play_btn.opacity = 0
+
+        expand = Animation(
+            pos=(0, 0),
+            size=self.morph_layer.size,
+            radius=0,
+            duration=0.45,
+            t="out_cubic",
+        )
+
+        def finish(*_):
+            previous_transition = self.manager.transition
+            self.manager.transition = NoTransition()
+            self.manager.current = reveal.name
+            self.manager.transition = previous_transition
+            Clock.schedule_once(lambda _dt: self._finish_morph_handoff(overlay, reveal), 0)
+
+        expand.bind(on_complete=finish)
+        expand.start(overlay)
+
+    def _finish_morph_handoff(self, overlay, reveal):
+        if overlay.parent is self.morph_layer:
+            self.morph_layer.remove_widget(overlay)
+        self.play_btn.opacity = 1
+        self.play_btn.disabled = False
+        self._transitioning = False
+        Clock.schedule_once(lambda _dt: reveal.start_entrance_animation(), 0)
