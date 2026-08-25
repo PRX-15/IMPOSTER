@@ -14,6 +14,9 @@ from kivy.uix.screenmanager import NoTransition
 from screens.common import COLORS, RoundedButton
 
 
+MORPH_BORDER_COLOR = (0.35, 0.65, 1.0, 1)
+
+
 class ScreenMorph:
     """Morph a source button into a fullscreen cover, then change screens."""
 
@@ -50,7 +53,7 @@ class ScreenMorph:
             size=source_button.size,
             pos=(start_x, start_y),
             bg_color=COLORS["bg"],
-            border_color=(1, 0.2, 0.5, 1),
+            border_color=MORPH_BORDER_COLOR,
             radius=radius,
             disabled=True,
         )
