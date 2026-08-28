@@ -46,6 +46,33 @@ class PlayerRow(BoxLayout):
         return self.input.text.strip() or f"Player {self.number}"
 
 
+class TitleBadge(FloatLayout):
+    def __init__(self, **kwargs):
+        super().__init__(size_hint_y=None, height=dp(76), **kwargs)
+        with self.canvas.before:
+            Color(COLORS["accent"][0], COLORS["accent"][1], COLORS["accent"][2], 0.12)
+            self.fill = RoundedRectangle(radius=[dp(26)])
+            Color(COLORS["accent"][0], COLORS["accent"][1], COLORS["accent"][2], 0.92)
+            self.border = Line(width=dp(1.7))
+        self.title = NeonLabel(
+            text="IMPOSTER",
+            font_size="40sp",
+            bold=True,
+            size_hint=(None, None),
+        )
+        self.add_widget(self.title)
+        self.bind(pos=self._draw, size=self._draw)
+        self._draw()
+
+    def _draw(self, *_):
+        self.fill.pos = self.pos
+        self.fill.size = self.size
+        self.border.rounded_rectangle = [self.x, self.y, self.width, self.height, dp(26)]
+        self.title.size = self.size
+        self.title.pos = self.pos
+        self.title.text_size = self.size
+
+
 class MainMenuScreen(Screen):
     def __init__(self, state, **kwargs):
         super().__init__(**kwargs)
@@ -62,39 +89,17 @@ class MainMenuScreen(Screen):
         root.bind(pos=self._draw_bg, size=self._draw_bg)
 
         stack = BoxLayout(orientation="vertical", spacing=dp(12), padding=[dp(26), dp(24)], size_hint=(1, 1))
-
-        title_area = BoxLayout(orientation="vertical", spacing=dp(7), size_hint_y=None, height=dp(126))
-        title_box = FloatLayout(size_hint_y=None, height=dp(82))
-        with title_box.canvas.before:
-            Color(COLORS["accent"][0], COLORS["accent"][1], COLORS["accent"][2], 0.15)
-            self.title_fill = RoundedRectangle(pos=title_box.pos, size=title_box.size, radius=[dp(28)])
-            Color(COLORS["accent"][0], COLORS["accent"][1], COLORS["accent"][2], 0.92)
-            self.title_border = Line(
-                rounded_rectangle=[title_box.x, title_box.y, title_box.width, title_box.height, dp(28)],
-                width=dp(1.7),
-            )
-        title_box.bind(pos=self._draw_title_box, size=self._draw_title_box)
-        title_box.add_widget(
-            NeonLabel(
-                text="IMPOSTER",
-                font_size="38sp",
-                bold=True,
-                font_name="data/fonts/Roboto-Bold.ttf",
-                size_hint=(1, 1),
-            )
-        )
-        title_area.add_widget(title_box)
-        title_area.add_widget(
+        stack.add_widget(TitleBadge())
+        stack.add_widget(
             NeonLabel(
                 text="ONE WORD. ONE FAKE. FIND THEM.",
                 font_size="11sp",
                 bold=True,
                 color=COLORS["muted"],
                 size_hint_y=None,
-                height=dp(30),
+                height=dp(24),
             )
         )
-        stack.add_widget(title_area)
 
         self.player_scroll = ScrollView(size_hint_y=1, do_scroll_x=False, bar_width=dp(4))
         self.player_box = BoxLayout(orientation="vertical", spacing=dp(10), size_hint_y=None, padding=[0, 0, 0, dp(2)])
@@ -105,8 +110,8 @@ class MainMenuScreen(Screen):
         self.add_btn.bind(on_release=self.add_player)
         stack.add_widget(self.add_btn)
         self.play_btn = RoundedButton(text="PLAY", size_hint_y=None, height=dp(60), bg_color=COLORS["primary"], border_color=(1, .38, .65, 1))
-        stack.add_widget(self.play_btn)
         self.play_btn.bind(on_release=self.play)
+        stack.add_widget(self.play_btn)
         stack.add_widget(NeonLabel(text="Pass the phone. Find the fake.", font_size="14sp", color=COLORS["muted"], size_hint_y=None, height=dp(32)))
         root.add_widget(stack)
         self.add_widget(root)
@@ -118,13 +123,6 @@ class MainMenuScreen(Screen):
         self.bg.pos, self.bg.size = root.pos, root.size
         self.orb1.pos = (root.width - dp(115), root.height - dp(120))
         self.orb2.pos = (-dp(35), dp(70))
-
-    def _draw_title_box(self, title_box, *_):
-        self.title_fill.pos = title_box.pos
-        self.title_fill.size = title_box.size
-        self.title_border.rounded_rectangle = [
-            title_box.x, title_box.y, title_box.width, title_box.height, dp(28)
-        ]
 
     def add_player(self, *_):
         if len(self.rows) >= MAX_PLAYERS:
