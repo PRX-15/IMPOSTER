@@ -6,7 +6,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
 from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
-from kivy.graphics import Color, RoundedRectangle, Ellipse
+from kivy.graphics import Color, RoundedRectangle, Ellipse, Line
 
 from animations.screen_morph import ScreenMorph
 from game.game_logic import MAX_PLAYERS
@@ -46,6 +46,33 @@ class PlayerRow(BoxLayout):
         return self.input.text.strip() or f"Player {self.number}"
 
 
+class TitleBadge(FloatLayout):
+    def __init__(self, **kwargs):
+        super().__init__(size_hint_y=None, height=dp(76), **kwargs)
+        with self.canvas.before:
+            Color(COLORS["accent"][0], COLORS["accent"][1], COLORS["accent"][2], 0.12)
+            self.fill = RoundedRectangle(radius=[dp(26)])
+            Color(COLORS["accent"][0], COLORS["accent"][1], COLORS["accent"][2], 0.92)
+            self.border = Line(width=dp(1.7))
+        self.title = NeonLabel(
+            text="IMPOSTER",
+            font_size="40sp",
+            bold=True,
+            size_hint=(None, None),
+        )
+        self.add_widget(self.title)
+        self.bind(pos=self._draw, size=self._draw)
+        self._draw()
+
+    def _draw(self, *_):
+        self.fill.pos = self.pos
+        self.fill.size = self.size
+        self.border.rounded_rectangle = [self.x, self.y, self.width, self.height, dp(26)]
+        self.title.size = self.size
+        self.title.pos = self.pos
+        self.title.text_size = self.size
+
+
 class MainMenuScreen(Screen):
     def __init__(self, state, **kwargs):
         super().__init__(**kwargs)
@@ -62,7 +89,18 @@ class MainMenuScreen(Screen):
         root.bind(pos=self._draw_bg, size=self._draw_bg)
 
         stack = BoxLayout(orientation="vertical", spacing=dp(12), padding=[dp(26), dp(24)], size_hint=(1, 1))
-        stack.add_widget(NeonLabel(text="IMPOSTER", font_size="42sp", bold=True, size_hint_y=None, height=dp(72)))
+        stack.add_widget(TitleBadge())
+        stack.add_widget(
+            NeonLabel(
+                text="ONE WORD. ONE FAKE. FIND THEM.",
+                font_size="11sp",
+                bold=True,
+                color=COLORS["muted"],
+                size_hint_y=None,
+                height=dp(24),
+            )
+        )
+
         self.player_scroll = ScrollView(size_hint_y=1, do_scroll_x=False, bar_width=dp(4))
         self.player_box = BoxLayout(orientation="vertical", spacing=dp(10), size_hint_y=None, padding=[0, 0, 0, dp(2)])
         self.player_box.bind(minimum_height=self.player_box.setter("height"))
