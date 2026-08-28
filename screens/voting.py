@@ -29,16 +29,16 @@ class VotingScreen(Screen):
             bg_color=COLORS["card"],
             font_size="14sp",
         )
-        button.bind(on_release=lambda btn, n=idx: self.select(n))
-        self.vote_buttons.append(button)
+        button.bind(on_release=lambda _button, player_idx=idx: self.select(player_idx))
+        self.vote_buttons[idx] = button
         return button
 
     def _pulse_selected(self, button):
-        Animation.cancel_all(button, "scale_x", "scale_y")
-        # A tiny opacity pulse gives selection feedback without changing layout.
-        Animation(opacity=.72, duration=.08, t="out_quad") + Animation(
+        Animation.cancel_all(button, "opacity")
+        pulse = Animation(opacity=.72, duration=.08, t="out_quad") + Animation(
             opacity=1, duration=.14, t="out_quad"
-        ).start(button)
+        )
+        pulse.start(button)
 
     def build_vote(self):
         self.selected = None
@@ -65,7 +65,7 @@ class VotingScreen(Screen):
             )
         )
 
-        self.vote_buttons = []
+        self.vote_buttons = {}
         thin_vote_buttons = player_count <= 5
         vote_button_height = 46 if thin_vote_buttons else None
         players_area = BoxLayout(
@@ -144,7 +144,7 @@ class VotingScreen(Screen):
 
     def select(self, idx):
         self.selected = idx
-        for button in self.vote_buttons:
+        for button in self.vote_buttons.values():
             button.bg_color = COLORS["card"]
             button.opacity = 1
             button._draw()
