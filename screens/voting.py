@@ -1,3 +1,4 @@
+from kivy.animation import Animation
 from kivy.metrics import dp
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
@@ -10,7 +11,11 @@ class VotingScreen(Screen):
         super().__init__(**kwargs)
         self.state = state
         self.selected = None
-        self.root = BoxLayout(orientation="vertical", padding=[dp(18), dp(20)], spacing=dp(8))
+        self.root = BoxLayout(
+            orientation="vertical",
+            padding=[dp(18), dp(20)],
+            spacing=dp(8),
+        )
         self.add_widget(self.root)
 
     def on_pre_enter(self):
@@ -27,6 +32,13 @@ class VotingScreen(Screen):
         button.bind(on_release=lambda btn, n=idx: self.select(n))
         self.vote_buttons.append(button)
         return button
+
+    def _pulse_selected(self, button):
+        Animation.cancel_all(button, "scale_x", "scale_y")
+        # A tiny opacity pulse gives selection feedback without changing layout.
+        Animation(opacity=.72, duration=.08, t="out_quad") + Animation(
+            opacity=1, duration=.14, t="out_quad"
+        ).start(button)
 
     def build_vote(self):
         self.selected = None
@@ -54,8 +66,6 @@ class VotingScreen(Screen):
         )
 
         self.vote_buttons = []
-        # With 3-5 players, keep vote buttons thin instead of stretching them
-        # into the entire remaining screen. The formation remains one column.
         thin_vote_buttons = player_count <= 5
         vote_button_height = 46 if thin_vote_buttons else None
         players_area = BoxLayout(
@@ -66,19 +76,14 @@ class VotingScreen(Screen):
             if thin_vote_buttons else 100,
         )
 
-        # 3-5 players: one full-width column, using thin fixed-height buttons.
         if player_count <= 5:
             for idx, name in enumerate(self.state.players):
                 players_area.add_widget(
                     self._make_vote_button(idx, name, height=vote_button_height)
                 )
-
         else:
-            # 6/8/10 players split evenly between two columns.
-            # 7/9 players use equal two-column rows plus one centered final pill.
             paired_count = player_count if player_count % 2 == 0 else player_count - 1
             rows = paired_count // 2
-
             columns = BoxLayout(
                 orientation="horizontal",
                 spacing=dp(10),
@@ -102,7 +107,6 @@ class VotingScreen(Screen):
 
             players_area.add_widget(columns)
 
-            # For 7 and 9 players, keep the remaining player centered below.
             if player_count % 2:
                 final_row = BoxLayout(
                     orientation="horizontal",
@@ -142,30 +146,46 @@ class VotingScreen(Screen):
         self.selected = idx
         for button in self.vote_buttons:
             button.bg_color = COLORS["card"]
+            button.opacity = 1
             button._draw()
+
         selected_button = self.vote_buttons[idx]
         selected_button.bg_color = COLORS["primary"]
         selected_button._draw()
+        self._pulse_selected(selected_button)
+
         self.confirm.disabled = False
-        self.confirm.opacity = 1
+        self.confirm.opacity = 0.45
+        Animation(opacity=1, duration=0.18, t="out_cubic").start(self.confirm)
         self.notice.text = f"Selected: {self.state.players[idx]}"
 
     def confirm_vote(self, *_):
+        if self.selected is None:
+            return
         self.state.cast_vote(self.state.current_vote_index, self.selected)
         self.selected = None
         self.root.clear_widgets()
+
         final = self.state.current_vote_index == len(self.state.players) - 1
-        self.root.add_widget(NeonLabel(text="VOTE LOCKED", font_size="26sp", bold=True))
-        text = "SHOW VOTE SUMMARY" if final else f"PASS THE PHONE TO {self.state.players[self.state.current_vote_index + 1].upper()}"
+        self.root.add_widget(
+            NeonLabel(text="VOTE LOCKED", font_size="26sp", bold=True)
+        )
+        text = (
+            "SHOW VOTE SUMMARY"
+            if final
+            else f"PASS THE PHONE TO {self.state.players[self.state.current_vote_index + 1].upper()}"
+        )
         button = RoundedButton(
             text=text,
             size_hint_y=None,
             height=dp(54),
             bg_color=COLORS["primary"],
             font_size="15sp",
+            opacity=0,
         )
         button.bind(on_release=self.next)
         self.root.add_widget(button)
+        Animation(opacity=1, duration=0.24, t="out_cubic").start(button)
 
     def next(self, *_):
         if self.state.current_vote_index >= len(self.state.players) - 1:
