@@ -6,7 +6,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
 from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
-from kivy.graphics import Color, RoundedRectangle, Ellipse
+from kivy.graphics import Color, RoundedRectangle, Ellipse, Line
 
 from animations.screen_morph import ScreenMorph
 from game.game_logic import MAX_PLAYERS
@@ -62,7 +62,42 @@ class MainMenuScreen(Screen):
         root.bind(pos=self._draw_bg, size=self._draw_bg)
 
         stack = BoxLayout(orientation="vertical", spacing=dp(12), padding=[dp(26), dp(24)], size_hint=(1, 1))
-        stack.add_widget(NeonLabel(text="IMPOSTER", font_size="42sp", bold=True, size_hint_y=None, height=dp(72)))
+
+        title_box = FloatLayout(size_hint_y=None, height=dp(126))
+        with title_box.canvas.before:
+            Color(COLORS["accent"][0], COLORS["accent"][1], COLORS["accent"][2], 0.16)
+            self.title_fill = RoundedRectangle(pos=title_box.pos, size=title_box.size, radius=[dp(34)])
+            Color(COLORS["accent"][0], COLORS["accent"][1], COLORS["accent"][2], 0.9)
+            self.title_border = Line(
+                rounded_rectangle=[title_box.x, title_box.y, title_box.width, title_box.height, dp(34)],
+                width=dp(1.6),
+            )
+        title_box.bind(pos=self._draw_title_box, size=self._draw_title_box)
+
+        title_box.add_widget(
+            NeonLabel(
+                text="IMPOSTER",
+                font_size="42sp",
+                bold=True,
+                font_name="data/fonts/Roboto-Bold.ttf",
+                size_hint=(1, None),
+                height=dp(62),
+                pos_hint={"center_x": .5, "center_y": .67},
+            )
+        )
+        title_box.add_widget(
+            NeonLabel(
+                text="ONE WORD. ONE FAKE. FIND THEM.",
+                font_size="12sp",
+                bold=True,
+                color=COLORS["muted"],
+                size_hint=(1, None),
+                height=dp(26),
+                pos_hint={"center_x": .5, "center_y": .27},
+            )
+        )
+        stack.add_widget(title_box)
+
         self.player_scroll = ScrollView(size_hint_y=1, do_scroll_x=False, bar_width=dp(4))
         self.player_box = BoxLayout(orientation="vertical", spacing=dp(10), size_hint_y=None, padding=[0, 0, 0, dp(2)])
         self.player_box.bind(minimum_height=self.player_box.setter("height"))
@@ -85,6 +120,13 @@ class MainMenuScreen(Screen):
         self.bg.pos, self.bg.size = root.pos, root.size
         self.orb1.pos = (root.width - dp(115), root.height - dp(120))
         self.orb2.pos = (-dp(35), dp(70))
+
+    def _draw_title_box(self, title_box, *_):
+        self.title_fill.pos = title_box.pos
+        self.title_fill.size = title_box.size
+        self.title_border.rounded_rectangle = [
+            title_box.x, title_box.y, title_box.width, title_box.height, dp(34)
+        ]
 
     def add_player(self, *_):
         if len(self.rows) >= MAX_PLAYERS:
