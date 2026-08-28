@@ -60,9 +60,11 @@ class ResultsScreen(Screen):
         totals = s.vote_totals()
         leaders = s.leaders()
         imp = s.players[s.imposter_index]
-        outcome = "IMPOSTER CAUGHT" if s.imposter_caught() else "IMPOSTER NOT CAUGHT"
+        caught = s.imposter_caught()
+        outcome = "IMPOSTER CAUGHT" if caught else "IMPOSTER NOT CAUGHT"
+        outcome_color = (0.35, 0.85, 0.40, 1) if caught else COLORS["primary"]
         voted = "TIE: " + ", ".join(s.players[i] for i in leaders) if s.is_tie() else s.players[leaders[0]]
-        self.root.add_widget(NeonLabel(text=outcome, font_size="30sp", bold=True, color=COLORS["primary"], size_hint_y=.12))
+        self.root.add_widget(NeonLabel(text=outcome, font_size="30sp", bold=True, color=outcome_color, size_hint_y=.12))
         self.root.add_widget(NeonLabel(text=f"THE IMPOSTER WAS\n{imp.upper()}", font_size="25sp", bold=True, size_hint_y=.18))
         self.root.add_widget(NeonLabel(text=f"MOST VOTES\n{voted}", font_size="19sp", color=COLORS["muted"], size_hint_y=.13))
         self.root.add_widget(NeonLabel(markup=True, text=("THE SECRET WORD WAS\n" f"{s.selected_word.word}\n" f"{hindi_markup(s.selected_word.word_hi)}\n\n" "CATEGORY\n" f"{s.selected_word.category}\n" f"{hindi_markup(s.selected_word.category_hi)}"), font_size="20sp", size_hint_y=.25))
