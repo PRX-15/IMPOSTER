@@ -121,24 +121,13 @@ class RevealScreen(Screen):
         return widget
 
     def start_entrance_animation(self):
-        for index, widget in enumerate(self.entrance_widgets):
+        for widget in self.entrance_widgets:
             Animation.cancel_all(widget, "opacity", "entrance_offset")
-            Animation(
-                opacity=1,
-                entrance_offset=0,
-                duration=0.38,
-                t="out_cubic",
-            ).start(widget)
+            Animation(opacity=1, entrance_offset=0, duration=0.38, t="out_cubic").start(widget)
 
         if hasattr(self, "card_area"):
             Animation.cancel_all(self.card_area, "opacity")
             Animation(opacity=1, duration=0.48, t="out_cubic").start(self.card_area)
-
-        if hasattr(self, "next_btn"):
-            Animation.cancel_all(self.next_btn, "opacity")
-            # Keep the action button hidden until the role is revealed.
-            target_opacity = 1 if not self.next_btn.disabled else 0
-            Animation(opacity=target_opacity, duration=0.3, t="out_cubic").start(self.next_btn)
 
     def _update_secret_text_bounds(self, *_):
         if not hasattr(self, "secret_label"):
@@ -216,11 +205,7 @@ class RevealScreen(Screen):
         )
         self.root.add_widget(self.turn_label)
 
-        self.card_area = RoundedStencilView(
-            radius=28,
-            size_hint_y=.52,
-            opacity=0,
-        )
+        self.card_area = RoundedStencilView(radius=28, size_hint_y=.52, opacity=0)
         self.root.add_widget(self.card_area)
 
         self.card_background = Widget(size_hint=(None, None))
@@ -316,20 +301,10 @@ class RevealScreen(Screen):
         self.secret_label.markup = True
 
         category_size = self._adaptive_size(
-            info["category"],
-            normal=30,
-            compact=26,
-            minimum=20,
-            compact_at=14,
-            minimum_at=30,
+            info["category"], normal=30, compact=26, minimum=20, compact_at=14, minimum_at=30
         )
         category_hi_size = self._adaptive_size(
-            info["category_hi"],
-            normal=20,
-            compact=18,
-            minimum=15,
-            compact_at=12,
-            minimum_at=26,
+            info["category_hi"], normal=20, compact=18, minimum=15, compact_at=12, minimum_at=26
         )
 
         if info["is_imposter"]:
@@ -341,20 +316,10 @@ class RevealScreen(Screen):
             )
         else:
             word_size = self._adaptive_size(
-                info["word"],
-                normal=34,
-                compact=29,
-                minimum=20,
-                compact_at=12,
-                minimum_at=28,
+                info["word"], normal=34, compact=29, minimum=20, compact_at=12, minimum_at=28
             )
             word_hi_size = self._adaptive_size(
-                info["word_hi"],
-                normal=21,
-                compact=18,
-                minimum=15,
-                compact_at=12,
-                minimum_at=26,
+                info["word_hi"], normal=21, compact=18, minimum=15, compact_at=12, minimum_at=26
             )
             self.secret_label.text = (
                 "[size=15sp]WORD[/size]\n"
