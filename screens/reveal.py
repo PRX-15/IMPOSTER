@@ -33,7 +33,7 @@ class EntranceLabel(NeonLabel):
 class RoundedStencilView(Widget):
     """A rounded viewport that clips all children to one card shape."""
 
-    def __init__(self, radius=28, **kwargs):
+    def __init__(self, radius=24, **kwargs):
         self.clip_radius = dp(radius)
         super().__init__(**kwargs)
         with self.canvas.before:
@@ -143,7 +143,7 @@ class RevealScreen(Screen):
             self.card_area.y,
             self.card_area.width,
             self.card_area.height,
-            dp(28),
+            dp(24),
         ]
 
     def _stop_curtain_animation(self):
@@ -205,7 +205,7 @@ class RevealScreen(Screen):
         )
         self.root.add_widget(self.turn_label)
 
-        self.card_area = RoundedStencilView(radius=28, size_hint_y=.52, opacity=0)
+        self.card_area = RoundedStencilView(radius=24, size_hint_y=.52, opacity=0)
         self.root.add_widget(self.card_area)
 
         self.card_background = Widget(size_hint=(None, None))
