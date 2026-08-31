@@ -13,6 +13,11 @@ from animations.screen_morph import ScreenMorph
 from game.game_logic import MAX_PLAYERS
 from .common import COLORS, NeonLabel, RoundedButton, asset_path
 
+try:
+    from jnius import autoclass
+except ImportError:
+    autoclass = None
+
 
 class PlayerListCard(BoxLayout):
     """Rounded card containing the editable player list and its scroll area."""
@@ -36,8 +41,6 @@ class PlayerRow(BoxLayout):
     def __init__(self, number, delete_callback=None, **kwargs):
         super().__init__(orientation="horizontal", spacing=dp(8), padding=[dp(18), dp(6)], size_hint_y=None, height=dp(58), **kwargs)
         self.delete_callback = delete_callback
-        # Keep individual rows visually clean, while the whole editor lives
-        # inside the larger rounded player-list card.
         with self.canvas.before:
             Color(*COLORS["card2"])
             self.bg = RoundedRectangle(radius=[dp(29)])
@@ -75,12 +78,7 @@ class TitleBadge(FloatLayout):
             self.fill = RoundedRectangle(radius=[dp(26)])
             Color(COLORS["accent"][0], COLORS["accent"][1], COLORS["accent"][2], 0.92)
             self.border = Line(width=dp(1.7))
-        self.title = NeonLabel(
-            text="IMPOSTER",
-            font_size="40sp",
-            bold=True,
-            size_hint=(None, None),
-        )
+        self.title = NeonLabel(text="IMPOSTER", font_size="40sp", bold=True, size_hint=(None, None))
         self.add_widget(self.title)
         self.bind(pos=self._draw, size=self._draw)
         self._draw()
@@ -95,10 +93,19 @@ class TitleBadge(FloatLayout):
 
 
 class MainMenuScreen(Screen):
+    MAX_PLAYER_MESSAGES = [
+        "You can only add up to 10 players.",
+        "Only 10 players can play bro.",
+        "10 10 10",
+        "Keep trying🤣",
+        "Bro, the 11th player is NOT happening 😭",
+    ]
+
     def __init__(self, state, **kwargs):
         super().__init__(**kwargs)
         self.state = state
         self.rows = []
+        self.max_player_message_index = 0
         root = FloatLayout()
         with root.canvas.before:
             Color(*COLORS["bg"])
@@ -111,19 +118,8 @@ class MainMenuScreen(Screen):
 
         stack = BoxLayout(orientation="vertical", spacing=dp(12), padding=[dp(26), dp(24)], size_hint=(1, 1))
         stack.add_widget(TitleBadge())
-        stack.add_widget(
-            NeonLabel(
-                text="ONE WORD. ONE FAKE. FIND THEM.",
-                font_size="11sp",
-                bold=True,
-                color=COLORS["muted"],
-                size_hint_y=None,
-                height=dp(24),
-            )
-        )
+        stack.add_widget(NeonLabel(text="ONE WORD. ONE FAKE. FIND THEM.", font_size="11sp", bold=True, color=COLORS["muted"], size_hint_y=None, height=dp(24)))
 
-        # The player editor is one rounded card. The ScrollView stays inside
-        # the card so additional players scroll without moving ADD PLAYER/PLAY.
         self.player_card = PlayerListCard(size_hint_y=1)
         self.player_scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False, bar_width=dp(4))
         self.player_box = BoxLayout(orientation="vertical", spacing=dp(10), size_hint_y=None, padding=[0, 0, 0, dp(2)])
@@ -150,8 +146,21 @@ class MainMenuScreen(Screen):
         self.orb1.pos = (root.width - dp(115), root.height - dp(120))
         self.orb2.pos = (-dp(35), dp(70))
 
+    def _show_max_players_message(self):
+        message = self.MAX_PLAYER_MESSAGES[self.max_player_message_index]
+        self.max_player_message_index = (self.max_player_message_index + 1) % len(self.MAX_PLAYER_MESSAGES)
+        if autoclass is None:
+            return
+        try:
+            Toast = autoclass("android.widget.Toast")
+            PythonActivity = autoclass("org.kivy.android.PythonActivity")
+            Toast.makeText(PythonActivity.mActivity, message, Toast.LENGTH_SHORT).show()
+        except Exception:
+            pass
+
     def add_player(self, *_):
         if len(self.rows) >= MAX_PLAYERS:
+            self._show_max_players_message()
             return
         row = PlayerRow(len(self.rows) + 1, delete_callback=self.remove_player)
         self.rows.append(row)
@@ -172,8 +181,16 @@ class MainMenuScreen(Screen):
     def _refresh_player_controls(self):
         count = len(self.rows)
         at_max = count >= MAX_PLAYERS
-        self.add_btn.opacity = 0 if at_max else 1
-        self.add_btn.disabled = at_max
+        if at_max:
+            self.add_btn.opacity = 1
+            self.add_btn.disabled = False
+            self.add_btn.bg_color = COLORS["card2"]
+            self.add_btn.border_color = COLORS["muted"]
+        else:
+            self.add_btn.opacity = 1
+            self.add_btn.disabled = False
+            self.add_btn.bg_color = COLORS["card"]
+            self.add_btn.border_color = COLORS["accent"]
         can_delete = count > 3
         for row in self.rows:
             row.delete_btn.disabled = not can_delete
@@ -185,8 +202,4 @@ class MainMenuScreen(Screen):
         self.state.start_round([row.player_name for row in self.rows])
         reveal = self.manager.get_screen("reveal")
         reveal.build_turn()
-        self.morph.start(
-            self.play_btn,
-            reveal,
-            on_handoff=lambda: Clock.schedule_once(lambda _dt: reveal.start_entrance_animation(), 0),
-        )
+        self.morph.start(self.play_btn, reveal, on_handoff=lambda: Clock.schedule_once(lambda _dt: reveal.start_entrance_animation(), 0))
