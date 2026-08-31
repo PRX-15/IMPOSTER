@@ -4,7 +4,6 @@ from kivy.properties import ListProperty
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, RoundedRectangle, Line
 
@@ -147,14 +146,17 @@ class ResultsScreen(Screen):
         outcome_color = (0.35, 0.85, 0.40, 1) if caught else COLORS["primary"]
         voted = "Tie: " + ", ".join(s.players[i] for i in leaders) if s.is_tie() else s.players[leaders[0]]
 
-        top = BoxLayout(orientation="vertical", size_hint=(1, None), height=dp(126), padding=[dp(20), 0], spacing=0, pos_hint={"top": 1})
+        # Keep the three-line outcome block together, but move it slightly down.
+        top = BoxLayout(orientation="vertical", size_hint=(1, None), height=dp(126), padding=[dp(20), dp(10), dp(20), 0], spacing=0, pos_hint={"top": .975})
         top.add_widget(NeonLabel(text=outcome, font_size="30sp", bold=True, color=outcome_color, size_hint_y=.52))
         top.add_widget(NeonLabel(text=imp, font_size="22sp", bold=True, size_hint_y=.28))
         top.add_widget(NeonLabel(text=f"Most votes: {voted}", font_size="14sp", color=COLORS["muted"], size_hint_y=.20))
         self.root.add_widget(top)
 
+        # The content itself scrolls, so leave a deliberate breathing space
+        # between "Most votes" and the first card.
         scroll = ScrollView(size_hint=(1, None), size=(self.width, self.height - dp(206)), pos_hint={"x": 0, "y": 0.13}, do_scroll_x=False, bar_width=dp(3))
-        content = BoxLayout(orientation="vertical", spacing=dp(10), padding=[dp(20), dp(8), dp(20), dp(8)], size_hint_y=None)
+        content = BoxLayout(orientation="vertical", spacing=dp(10), padding=[dp(20), dp(28), dp(20), dp(8)], size_hint_y=None)
         content.bind(minimum_height=content.setter("height"))
         content.add_widget(self._build_round_info(s.selected_word.word, s.selected_word.word_hi, s.selected_word.category, s.selected_word.category_hi))
         content.add_widget(self._build_vote_card(s.players, totals))
