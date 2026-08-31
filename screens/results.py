@@ -22,6 +22,11 @@ class ResultsScreen(Screen):
     def _result_label(self, name, votes):
         return NeonLabel(text=f"{name}: {votes}", font_size="16sp", color=COLORS["muted"], size_hint_y=1)
 
+    def _score_label(self, name, total, change):
+        sign = "+" if change > 0 else ""
+        change_text = f"{sign}{change}" if change else "0"
+        return NeonLabel(text=f"{name}: {total}  ({change_text})", font_size="16sp", color=COLORS["text"], size_hint_y=1)
+
     def _build_vote_results(self, players, totals):
         player_count = len(players)
         results_area = BoxLayout(orientation="vertical", spacing=dp(2), size_hint_y=.2)
@@ -54,6 +59,15 @@ class ResultsScreen(Screen):
         results_area.add_widget(player_results)
         return results_area
 
+    def _build_score_results(self, players, scores, points):
+        area = BoxLayout(orientation="vertical", spacing=dp(2), size_hint_y=.22)
+        area.add_widget(NeonLabel(text="POINTS THIS ROUND  |  TOTAL", font_size="15sp", color=COLORS["muted"], size_hint_y=None, height=dp(24)))
+        rows = BoxLayout(orientation="vertical", spacing=dp(2))
+        for idx, name in enumerate(players):
+            rows.add_widget(self._score_label(name, scores[idx], points[idx]))
+        area.add_widget(rows)
+        return area
+
     def build(self):
         self.root.clear_widgets()
         s = self.state
@@ -61,6 +75,7 @@ class ResultsScreen(Screen):
         leaders = s.leaders()
         imp = s.players[s.imposter_index]
         caught = s.imposter_caught()
+        points = s.calculate_round_points()
         outcome = "IMPOSTER CAUGHT" if caught else "IMPOSTER NOT CAUGHT"
         outcome_color = (0.35, 0.85, 0.40, 1) if caught else COLORS["primary"]
         voted = "TIE: " + ", ".join(s.players[i] for i in leaders) if s.is_tie() else s.players[leaders[0]]
@@ -69,6 +84,7 @@ class ResultsScreen(Screen):
         self.root.add_widget(NeonLabel(text=f"MOST VOTES\n{voted}", font_size="19sp", color=COLORS["muted"], size_hint_y=.13))
         self.root.add_widget(NeonLabel(markup=True, text=("THE SECRET WORD WAS\n" f"{s.selected_word.word}\n" f"{hindi_markup(s.selected_word.word_hi)}\n\n" "CATEGORY\n" f"{s.selected_word.category}\n" f"{hindi_markup(s.selected_word.category_hi)}"), font_size="20sp", size_hint_y=.25))
         self.root.add_widget(self._build_vote_results(s.players, totals))
+        self.root.add_widget(self._build_score_results(s.players, s.scores, points))
         self.again_btn = RoundedButton(text="PLAY AGAIN", size_hint_y=None, height=dp(58), bg_color=COLORS["primary"])
         self.again_btn.bind(on_release=self.again)
         self.root.add_widget(self.again_btn)
