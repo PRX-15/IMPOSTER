@@ -1,5 +1,6 @@
 from kivy.clock import Clock
 from kivy.metrics import dp
+from kivy.properties import ListProperty
 from kivy.uix.screenmanager import Screen
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
@@ -13,12 +14,32 @@ from game.game_logic import MAX_PLAYERS
 from .common import COLORS, NeonLabel, RoundedButton, asset_path
 
 
+class PlayerListCard(BoxLayout):
+    """Rounded card containing the editable player list and its scroll area."""
+
+    def __init__(self, **kwargs):
+        super().__init__(orientation="vertical", padding=[dp(12), dp(12)], **kwargs)
+        with self.canvas.before:
+            Color(*COLORS["card"])
+            self.bg = RoundedRectangle(radius=[dp(24)])
+            Color(*COLORS["accent"])
+            self.border = Line(width=dp(1.2))
+        self.bind(pos=self._draw, size=self._draw)
+
+    def _draw(self, *_):
+        self.bg.pos = self.pos
+        self.bg.size = self.size
+        self.border.rounded_rectangle = [self.x, self.y, self.width, self.height, dp(24)]
+
+
 class PlayerRow(BoxLayout):
     def __init__(self, number, delete_callback=None, **kwargs):
         super().__init__(orientation="horizontal", spacing=dp(8), padding=[dp(18), dp(6)], size_hint_y=None, height=dp(58), **kwargs)
         self.delete_callback = delete_callback
+        # Keep individual rows visually clean, while the whole editor lives
+        # inside the larger rounded player-list card.
         with self.canvas.before:
-            Color(*COLORS["card"])
+            Color(*COLORS["card2"])
             self.bg = RoundedRectangle(radius=[dp(29)])
         self.bind(pos=self._draw, size=self._draw)
         self.add_widget(Image(source=asset_path("main-menu", "player-icon.png"), size_hint_x=None, width=dp(34)))
@@ -101,11 +122,16 @@ class MainMenuScreen(Screen):
             )
         )
 
-        self.player_scroll = ScrollView(size_hint_y=1, do_scroll_x=False, bar_width=dp(4))
+        # The player editor is one rounded card. The ScrollView stays inside
+        # the card so additional players scroll without moving ADD PLAYER/PLAY.
+        self.player_card = PlayerListCard(size_hint_y=1)
+        self.player_scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False, bar_width=dp(4))
         self.player_box = BoxLayout(orientation="vertical", spacing=dp(10), size_hint_y=None, padding=[0, 0, 0, dp(2)])
         self.player_box.bind(minimum_height=self.player_box.setter("height"))
         self.player_scroll.add_widget(self.player_box)
-        stack.add_widget(self.player_scroll)
+        self.player_card.add_widget(self.player_scroll)
+        stack.add_widget(self.player_card)
+
         self.add_btn = RoundedButton(text="+ ADD PLAYER", size_hint_y=None, height=dp(52), bg_color=COLORS["card"])
         self.add_btn.bind(on_release=self.add_player)
         stack.add_widget(self.add_btn)
