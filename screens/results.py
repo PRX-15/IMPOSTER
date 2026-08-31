@@ -16,7 +16,7 @@ class RoundedCard(BoxLayout):
 
     bg_color = ListProperty(COLORS["card"])
     border_color = ListProperty(COLORS["accent"])
-    radius = dp(22)
+    radius = dp(20)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -45,12 +45,11 @@ class VoteRow(BoxLayout):
         self.add_widget(self.name)
         self.add_widget(self.bar_host)
         self.add_widget(self.votes_label)
-
         with self.bar_host.canvas.before:
             Color(*(COLORS["card2"]))
-            self.track = RoundedRectangle(radius=[dp(7)])
+            self.track = RoundedRectangle(radius=[dp(6)])
             Color(*(COLORS["primary"] if highlighted else COLORS["accent"]))
-            self.fill = RoundedRectangle(radius=[dp(7)])
+            self.fill = RoundedRectangle(radius=[dp(6)])
         self.bar_host.bind(pos=self._draw, size=self._draw)
         self.votes = votes
         self.maximum_votes = maximum_votes
@@ -78,11 +77,9 @@ class ResultsScreen(Screen):
 
     def _build_round_info(self, word, word_hi, category, category_hi):
         card = RoundedCard(size_hint_y=None, height=dp(94), padding=[dp(10), dp(10)], spacing=0)
-
         left = BoxLayout(orientation="vertical", size_hint_x=.48, spacing=0)
         left.add_widget(NeonLabel(text=word, font_size="18sp", bold=True, size_hint_y=.56))
         left.add_widget(NeonLabel(markup=True, text=hindi_markup(word_hi), font_size="14sp", color=COLORS["muted"], size_hint_y=.44))
-
         divider_host = FloatLayout(size_hint_x=None, width=dp(1))
         with divider_host.canvas.before:
             Color(*COLORS["accent"])
@@ -91,11 +88,9 @@ class ResultsScreen(Screen):
             divider.points = [divider_host.center_x, divider_host.y + dp(14), divider_host.center_x, divider_host.top - dp(14)]
         divider_host.bind(pos=draw_divider, size=draw_divider)
         draw_divider()
-
         right = BoxLayout(orientation="vertical", size_hint_x=.48, spacing=0)
         right.add_widget(NeonLabel(text=category, font_size="18sp", bold=True, size_hint_y=.56))
         right.add_widget(NeonLabel(markup=True, text=hindi_markup(category_hi), font_size="14sp", color=COLORS["muted"], size_hint_y=.44))
-
         card.add_widget(left)
         card.add_widget(divider_host)
         card.add_widget(right)
@@ -113,24 +108,20 @@ class ResultsScreen(Screen):
 
     def _build_score_card(self, players, scores, points):
         card = RoundedCard(orientation="vertical", size_hint_y=None, padding=[dp(14), dp(12)], spacing=dp(4))
-
         header = BoxLayout(orientation="horizontal", size_hint_y=None, height=dp(23))
         header.add_widget(NeonLabel(text="PLAYER", font_size="13sp", color=COLORS["muted"], halign="left", size_hint_x=.52))
         header.add_widget(NeonLabel(text="ROUND", font_size="13sp", color=COLORS["muted"], size_hint_x=.24))
         header.add_widget(NeonLabel(text="TOTAL", font_size="13sp", color=COLORS["muted"], size_hint_x=.24))
         card.add_widget(header)
-
         for idx, name in enumerate(players):
             row = BoxLayout(orientation="horizontal", size_hint_y=None, height=dp(30))
             row.add_widget(NeonLabel(text=name, font_size="13sp", halign="left", size_hint_x=.52))
             change = points[idx]
             sign = "+" if change > 0 else ""
-            change_text = f"{sign}{change}"
             change_color = (0.35, 0.85, 0.40, 1) if change > 0 else ((1.0, 0.35, 0.40, 1) if change < 0 else COLORS["muted"])
-            row.add_widget(NeonLabel(text=change_text, font_size="14sp", bold=True, color=change_color, size_hint_x=.24))
+            row.add_widget(NeonLabel(text=f"{sign}{change}", font_size="14sp", bold=True, color=change_color, size_hint_x=.24))
             row.add_widget(NeonLabel(text=str(scores[idx]), font_size="14sp", bold=True, size_hint_x=.24))
             card.add_widget(row)
-
         card.height = dp(35) + dp(30) * len(players) + dp(24)
         return card
 
@@ -145,16 +136,11 @@ class ResultsScreen(Screen):
         outcome = "IMPOSTER CAUGHT" if caught else "IMPOSTER NOT CAUGHT"
         outcome_color = (0.35, 0.85, 0.40, 1) if caught else COLORS["primary"]
         voted = "Tie: " + ", ".join(s.players[i] for i in leaders) if s.is_tie() else s.players[leaders[0]]
-
-        # Keep the three-line outcome block together, but move it slightly down.
         top = BoxLayout(orientation="vertical", size_hint=(1, None), height=dp(126), padding=[dp(20), dp(10), dp(20), 0], spacing=0, pos_hint={"top": .975})
         top.add_widget(NeonLabel(text=outcome, font_size="30sp", bold=True, color=outcome_color, size_hint_y=.52))
         top.add_widget(NeonLabel(text=imp, font_size="22sp", bold=True, size_hint_y=.28))
         top.add_widget(NeonLabel(text=f"Most votes: {voted}", font_size="14sp", color=COLORS["muted"], size_hint_y=.20))
         self.root.add_widget(top)
-
-        # The content itself scrolls, so leave a deliberate breathing space
-        # between "Most votes" and the first card.
         scroll = ScrollView(size_hint=(1, None), size=(self.width, self.height - dp(206)), pos_hint={"x": 0, "y": 0.13}, do_scroll_x=False, bar_width=dp(3))
         content = BoxLayout(orientation="vertical", spacing=dp(10), padding=[dp(20), dp(28), dp(20), dp(8)], size_hint_y=None)
         content.bind(minimum_height=content.setter("height"))
@@ -163,7 +149,6 @@ class ResultsScreen(Screen):
         content.add_widget(self._build_score_card(s.players, s.scores, points))
         scroll.add_widget(content)
         self.root.add_widget(scroll)
-
         buttons = BoxLayout(orientation="vertical", spacing=dp(8), padding=[dp(20), dp(8)], size_hint=(1, None), height=dp(110), pos_hint={"x": 0, "y": 0})
         self.again_btn = RoundedButton(text="PLAY AGAIN", size_hint_y=None, height=dp(50), bg_color=COLORS["primary"])
         self.again_btn.bind(on_release=self.again)
@@ -179,11 +164,7 @@ class ResultsScreen(Screen):
         self.state.start_round(self.state.players)
         reveal = self.manager.get_screen("reveal")
         reveal.build_turn()
-        self.morph.start(
-            self.again_btn,
-            reveal,
-            on_handoff=lambda: Clock.schedule_once(lambda _dt: reveal.start_entrance_animation(), 0),
-        )
+        self.morph.start(self.again_btn, reveal, on_handoff=lambda: Clock.schedule_once(lambda _dt: reveal.start_entrance_animation(), 0))
 
     def menu(self, *_):
         self.state.reset_to_menu()
