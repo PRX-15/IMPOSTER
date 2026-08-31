@@ -11,13 +11,10 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 ASSET_DIR = ROOT_DIR / "assets"
 GAME_FONT = str(ASSET_DIR / "fonts" / "Matcha Mint.otf")
 
-# Register the game's display font once so every shared Kivy text widget can
-# use it consistently. Hindi text continues to use Android's Devanagari font
-# explicitly through hindi_markup().
+# The special font is intentionally registered only for the main-menu title.
 if Path(GAME_FONT).exists():
-    LabelBase.register(name="GameFont", fn_regular=GAME_FONT)
+    LabelBase.register(name="TitleFont", fn_regular=GAME_FONT)
 
-# Android ROMs can ship different Noto Devanagari filenames.
 _DEVANAGARI_CANDIDATES = (
     Path("/system/fonts/NotoSansDevanagari-Regular.ttf"),
     Path("/system/fonts/NotoSansDevanagari-VF.ttf"),
@@ -54,16 +51,11 @@ class NeonLabel(Label):
         kwargs.setdefault("color", COLORS["text"])
         kwargs.setdefault("halign", "center")
         kwargs.setdefault("valign", "middle")
-        if Path(GAME_FONT).exists():
-            kwargs.setdefault("font_name", "GameFont")
         super().__init__(**kwargs)
         self.bind(size=lambda *_: setattr(self, "text_size", self.size))
 
 
 class RoundedButton(Button):
-    # These must be Kivy properties. The morph animation changes radius and
-    # colours every frame, and plain Python attributes would not redraw the
-    # canvas while Animation is running.
     bg_color = ListProperty(COLORS["card2"])
     border_color = ListProperty(COLORS["accent"])
     radius = NumericProperty(dp(22))
@@ -75,8 +67,6 @@ class RoundedButton(Button):
         kwargs.setdefault("color", COLORS["text"])
         kwargs.setdefault("bold", True)
         kwargs.setdefault("font_size", "18sp")
-        if Path(GAME_FONT).exists():
-            kwargs.setdefault("font_name", "GameFont")
         super().__init__(**kwargs)
 
         self.bg_color = bg_color or COLORS["card2"]
