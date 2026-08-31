@@ -13,11 +13,6 @@ from animations.screen_morph import ScreenMorph
 from game.game_logic import MAX_PLAYERS
 from .common import COLORS, NeonLabel, RoundedButton, asset_path
 
-try:
-    from jnius import autoclass
-except ImportError:
-    autoclass = None
-
 
 class PlayerListCard(BoxLayout):
     """Rounded card containing the editable player list and its scroll area."""
@@ -93,19 +88,10 @@ class TitleBadge(FloatLayout):
 
 
 class MainMenuScreen(Screen):
-    MAX_PLAYER_MESSAGES = [
-        "You can only add up to 10 players.",
-        "Only 10 players can play bro.",
-        "10 10 10",
-        "Keep trying🤣",
-        "Bro, the 11th player is NOT happening 😭",
-    ]
-
     def __init__(self, state, **kwargs):
         super().__init__(**kwargs)
         self.state = state
         self.rows = []
-        self.max_player_message_index = 0
         root = FloatLayout()
         with root.canvas.before:
             Color(*COLORS["bg"])
@@ -146,21 +132,8 @@ class MainMenuScreen(Screen):
         self.orb1.pos = (root.width - dp(115), root.height - dp(120))
         self.orb2.pos = (-dp(35), dp(70))
 
-    def _show_max_players_message(self):
-        message = self.MAX_PLAYER_MESSAGES[self.max_player_message_index]
-        self.max_player_message_index = (self.max_player_message_index + 1) % len(self.MAX_PLAYER_MESSAGES)
-        if autoclass is None:
-            return
-        try:
-            Toast = autoclass("android.widget.Toast")
-            PythonActivity = autoclass("org.kivy.android.PythonActivity")
-            Toast.makeText(PythonActivity.mActivity, message, Toast.LENGTH_SHORT).show()
-        except Exception:
-            pass
-
     def add_player(self, *_):
         if len(self.rows) >= MAX_PLAYERS:
-            self._show_max_players_message()
             return
         row = PlayerRow(len(self.rows) + 1, delete_callback=self.remove_player)
         self.rows.append(row)
@@ -181,11 +154,12 @@ class MainMenuScreen(Screen):
     def _refresh_player_controls(self):
         count = len(self.rows)
         at_max = count >= MAX_PLAYERS
+        # Keep ADD PLAYER visible, but make it unmistakably look disabled at 10.
         if at_max:
             self.add_btn.opacity = 1
-            self.add_btn.disabled = False
-            self.add_btn.bg_color = COLORS["card2"]
-            self.add_btn.border_color = COLORS["muted"]
+            self.add_btn.disabled = True
+            self.add_btn.bg_color = (0.12, 0.12, 0.16, 1)
+            self.add_btn.border_color = (0.38, 0.38, 0.44, 1)
         else:
             self.add_btn.opacity = 1
             self.add_btn.disabled = False
