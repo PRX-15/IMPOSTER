@@ -44,7 +44,7 @@ class PlayerRow(BoxLayout):
         self.input = TextInput(text="", hint_text="Enter a name", multiline=False, background_color=(0, 0, 0, 0), foreground_color=COLORS["text"], hint_text_color=COLORS["muted"], cursor_color=COLORS["primary"], font_size="18sp", padding=[0, dp(14), 0, 0])
         self.add_widget(self.input)
         self.add_widget(Image(source=asset_path("main-menu", "pencil-icon.png"), size_hint_x=None, width=dp(26)))
-        self.delete_btn = RoundedButton(text="DELETE", font_size="11sp", size_hint_x=None, width=dp(64), height=dp(34), bg_color=COLORS.get("danger", (0.85, 0.08, 0.28, 1)))
+        self.delete_btn = RoundedButton(text="−", font_size="22sp", size_hint_x=None, width=dp(42), height=dp(28), bg_color=COLORS.get("danger", (0.85, 0.08, 0.28, 1)))
         self.delete_btn.bind(on_release=self._delete)
         self.add_widget(self.delete_btn)
         self.number = number
@@ -154,7 +154,6 @@ class MainMenuScreen(Screen):
     def _refresh_player_controls(self):
         count = len(self.rows)
         at_max = count >= MAX_PLAYERS
-        # Keep ADD PLAYER visible, but make it unmistakably look disabled at 10.
         if at_max:
             self.add_btn.opacity = 1
             self.add_btn.disabled = True
