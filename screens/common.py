@@ -9,7 +9,7 @@ from kivy.graphics import Color, RoundedRectangle, Line
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 ASSET_DIR = ROOT_DIR / "assets"
-GAME_FONT = str(ASSET_DIR / "fonts" / "Venite Adoremus Straight.otf")
+GAME_FONT = str(ASSET_DIR / "fonts" / "Matcha Mint.otf")
 
 # Register the game's display font once so every shared Kivy text widget can
 # use it consistently. Hindi text continues to use Android's Devanagari font
