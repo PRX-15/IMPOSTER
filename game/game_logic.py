@@ -27,6 +27,9 @@ class GameState:
     selected_word: Optional[RoundWord] = None
     imposter_index: Optional[int] = None
     votes: Dict[int, int] = field(default_factory=dict)
+    scores: Dict[int, int] = field(default_factory=dict)
+    round_points: Dict[int, int] = field(default_factory=dict)
+    round_scored: bool = False
     current_phase: str = "menu"
     _last_word: Optional[str] = None
 
@@ -34,6 +37,12 @@ class GameState:
         if not MIN_PLAYERS <= len(names) <= MAX_PLAYERS:
             raise ValueError("IMPOSTER supports 3 to 10 players.")
         self.players = [name.strip() or f"Player {i + 1}" for i, name in enumerate(names)]
+
+    def reset_scores(self) -> None:
+        """Start a fresh game session with all players at zero points."""
+        self.scores = {i: 0 for i in range(len(self.players))}
+        self.round_points.clear()
+        self.round_scored = False
 
     def start_round(self, names: Optional[List[str]] = None) -> None:
         if names is not None:
@@ -50,6 +59,11 @@ class GameState:
         self.current_reveal_index = 0
         self.current_vote_index = 0
         self.votes.clear()
+        self.round_points = {i: 0 for i in range(len(self.players))}
+        self.round_scored = False
+        # Keep scores across Play Again rounds, but initialize them if needed.
+        for i in range(len(self.players)):
+            self.scores.setdefault(i, 0)
         self.current_phase = "reveal"
 
     def get_secret_for_player(self, index: int) -> Dict[str, str | bool]:
@@ -87,6 +101,36 @@ class GameState:
 
     def imposter_caught(self) -> bool:
         return not self.is_tie() and self.leaders() == [self.imposter_index]
+
+    def calculate_round_points(self) -> Dict[int, int]:
+        """Calculate and apply points for the completed round exactly once.
+
+        The imposter gets 2 points if not caught, otherwise 0.
+        Non-imposters get +1 for voting for the imposter and -1 for voting elsewhere.
+        The imposter's own vote does not affect their score.
+        """
+        self._require_round()
+        if self.round_scored:
+            return dict(self.round_points)
+
+        points = {i: 0 for i in range(len(self.players))}
+        caught = self.imposter_caught()
+
+        # Imposter outcome points.
+        if not caught:
+            points[self.imposter_index] = 2
+
+        # Voter accuracy points for the non-imposters.
+        for voter_index, target_index in self.votes.items():
+            if voter_index == self.imposter_index:
+                continue
+            points[voter_index] = 1 if target_index == self.imposter_index else -1
+
+        self.round_points = points
+        for index, value in points.items():
+            self.scores[index] = self.scores.get(index, 0) + value
+        self.round_scored = True
+        return dict(points)
 
     def reset_to_menu(self) -> None:
         self.current_phase = "menu"
