@@ -76,21 +76,29 @@ class ResultsScreen(Screen):
         self.build()
 
     def _build_round_info(self, word, word_hi, category, category_hi):
-        card = RoundedCard(size_hint_y=None, height=dp(94), padding=[dp(10), dp(10)], spacing=0)
+        # Give the card enough vertical room for small headers above the
+        # bilingual word/category values without making the card feel cramped.
+        card = RoundedCard(size_hint_y=None, height=dp(116), padding=[dp(10), dp(9)], spacing=0)
+
         left = BoxLayout(orientation="vertical", size_hint_x=.48, spacing=0)
-        left.add_widget(NeonLabel(text=word, font_size="18sp", bold=True, size_hint_y=.56))
-        left.add_widget(NeonLabel(markup=True, text=hindi_markup(word_hi), font_size="14sp", color=COLORS["muted"], size_hint_y=.44))
+        left.add_widget(NeonLabel(text="WORD", font_size="11sp", bold=True, color=COLORS["muted"], size_hint_y=.22))
+        left.add_widget(NeonLabel(text=word, font_size="17sp", bold=True, size_hint_y=.43))
+        left.add_widget(NeonLabel(markup=True, text=hindi_markup(word_hi), font_size="13sp", color=COLORS["muted"], size_hint_y=.35))
+
         divider_host = FloatLayout(size_hint_x=None, width=dp(1))
         with divider_host.canvas.before:
             Color(*COLORS["accent"])
             divider = Line(width=dp(1.0))
         def draw_divider(*_):
-            divider.points = [divider_host.center_x, divider_host.y + dp(14), divider_host.center_x, divider_host.top - dp(14)]
+            divider.points = [divider_host.center_x, divider_host.y + dp(17), divider_host.center_x, divider_host.top - dp(17)]
         divider_host.bind(pos=draw_divider, size=draw_divider)
         draw_divider()
+
         right = BoxLayout(orientation="vertical", size_hint_x=.48, spacing=0)
-        right.add_widget(NeonLabel(text=category, font_size="18sp", bold=True, size_hint_y=.56))
-        right.add_widget(NeonLabel(markup=True, text=hindi_markup(category_hi), font_size="14sp", color=COLORS["muted"], size_hint_y=.44))
+        right.add_widget(NeonLabel(text="CATEGORY", font_size="11sp", bold=True, color=COLORS["muted"], size_hint_y=.22))
+        right.add_widget(NeonLabel(text=category, font_size="17sp", bold=True, size_hint_y=.43))
+        right.add_widget(NeonLabel(markup=True, text=hindi_markup(category_hi), font_size="13sp", color=COLORS["muted"], size_hint_y=.35))
+
         card.add_widget(left)
         card.add_widget(divider_host)
         card.add_widget(right)
@@ -141,14 +149,18 @@ class ResultsScreen(Screen):
         top.add_widget(NeonLabel(text=imp, font_size="22sp", bold=True, size_hint_y=.28))
         top.add_widget(NeonLabel(text=f"Most votes: {voted}", font_size="14sp", color=COLORS["muted"], size_hint_y=.20))
         self.root.add_widget(top)
+
+        # Start the scroll content lower so there is a clearer visual break
+        # between "Most votes" and the word/category card.
         scroll = ScrollView(size_hint=(1, None), size=(self.width, self.height - dp(206)), pos_hint={"x": 0, "y": 0.13}, do_scroll_x=False, bar_width=dp(3))
-        content = BoxLayout(orientation="vertical", spacing=dp(10), padding=[dp(20), dp(28), dp(20), dp(8)], size_hint_y=None)
+        content = BoxLayout(orientation="vertical", spacing=dp(10), padding=[dp(20), dp(46), dp(20), dp(8)], size_hint_y=None)
         content.bind(minimum_height=content.setter("height"))
         content.add_widget(self._build_round_info(s.selected_word.word, s.selected_word.word_hi, s.selected_word.category, s.selected_word.category_hi))
         content.add_widget(self._build_vote_card(s.players, totals))
         content.add_widget(self._build_score_card(s.players, s.scores, points))
         scroll.add_widget(content)
         self.root.add_widget(scroll)
+
         buttons = BoxLayout(orientation="vertical", spacing=dp(8), padding=[dp(20), dp(8)], size_hint=(1, None), height=dp(110), pos_hint={"x": 0, "y": 0})
         self.again_btn = RoundedButton(text="PLAY AGAIN", size_hint_y=None, height=dp(50), bg_color=COLORS["primary"])
         self.again_btn.bind(on_release=self.again)
