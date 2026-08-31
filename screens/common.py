@@ -59,9 +59,9 @@ class RoundedButton(Button):
     # canvas while Animation is running.
     bg_color = ListProperty(COLORS["card2"])
     border_color = ListProperty(COLORS["accent"])
-    radius = NumericProperty(dp(28))
+    radius = NumericProperty(dp(22))
 
-    def __init__(self, bg_color=None, border_color=None, radius=28, **kwargs):
+    def __init__(self, bg_color=None, border_color=None, radius=22, **kwargs):
         kwargs.setdefault("background_normal", "")
         kwargs.setdefault("background_down", "")
         kwargs.setdefault("background_color", (0, 0, 0, 0))
