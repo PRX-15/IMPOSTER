@@ -44,7 +44,7 @@ class PlayerRow(BoxLayout):
         self.input = TextInput(text="", hint_text="Enter a name", multiline=False, background_color=(0, 0, 0, 0), foreground_color=COLORS["text"], hint_text_color=COLORS["muted"], cursor_color=COLORS["primary"], font_size="18sp", padding=[0, dp(14), 0, 0])
         self.add_widget(self.input)
         self.add_widget(Image(source=asset_path("main-menu", "pencil-icon.png"), size_hint_x=None, width=dp(26)))
-        self.delete_btn = RoundedButton(text="−", font_size="22sp", size_hint_x=None, width=dp(42), height=dp(28), bg_color=COLORS.get("danger", (0.85, 0.08, 0.28, 1)))
+        self.delete_btn = RoundedButton(text="−", font_size="22sp", size_hint_x=None, width=dp(42), height=dp(28), radius=10, bg_color=COLORS.get("danger", (0.85, 0.08, 0.28, 1)))
         self.delete_btn.bind(on_release=self._delete)
         self.add_widget(self.delete_btn)
         self.number = number
@@ -70,7 +70,7 @@ class TitleBadge(FloatLayout):
         super().__init__(size_hint_y=None, height=dp(76), **kwargs)
         with self.canvas.before:
             Color(COLORS["accent"][0], COLORS["accent"][1], COLORS["accent"][2], 0.12)
-            self.fill = RoundedRectangle(radius=[dp(22)])
+            self.fill = RoundedRectangle(radius=[dp(26)])
             Color(COLORS["accent"][0], COLORS["accent"][1], COLORS["accent"][2], 0.92)
             self.border = Line(width=dp(1.7))
         self.title = NeonLabel(text="IMPOSTER", font_size="40sp", bold=True, size_hint=(None, None))
@@ -81,7 +81,7 @@ class TitleBadge(FloatLayout):
     def _draw(self, *_):
         self.fill.pos = self.pos
         self.fill.size = self.size
-        self.border.rounded_rectangle = [self.x, self.y, self.width, self.height, dp(22)]
+        self.border.rounded_rectangle = [self.x, self.y, self.width, self.height, dp(26)]
         self.title.size = self.size
         self.title.pos = self.pos
         self.title.text_size = self.size
