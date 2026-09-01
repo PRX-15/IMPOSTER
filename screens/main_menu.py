@@ -7,6 +7,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
 from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
+from kivy.animation import Animation
 from kivy.graphics import Color, RoundedRectangle, Ellipse, Line
 
 from animations.screen_morph import ScreenMorph
@@ -33,6 +34,8 @@ class PlayerListCard(BoxLayout):
 
 
 class PlayerRow(BoxLayout):
+    CONTROL_ANIMATION = 0.24
+
     def __init__(self, number, delete_callback=None, **kwargs):
         super().__init__(orientation="horizontal", spacing=dp(8), padding=[dp(18), dp(6)], size_hint_y=None, height=dp(58), **kwargs)
         self.delete_callback = delete_callback
@@ -40,14 +43,26 @@ class PlayerRow(BoxLayout):
             Color(*COLORS["card2"])
             self.bg = RoundedRectangle(radius=[dp(24)])
         self.bind(pos=self._draw, size=self._draw)
-        self.add_widget(Image(source=asset_path("main-menu", "player-icon.png"), size_hint_x=None, width=dp(34)))
+
+        self.player_icon = Image(source=asset_path("main-menu", "player-icon.png"), size_hint_x=None, width=dp(34))
+        self.add_widget(self.player_icon)
+
         self.input = TextInput(text="", hint_text="Enter a name", multiline=False, background_color=(0, 0, 0, 0), foreground_color=COLORS["text"], hint_text_color=COLORS["muted"], cursor_color=COLORS["primary"], font_size="18sp", padding=[0, dp(14), 0, 0])
         self.add_widget(self.input)
-        self.add_widget(Image(source=asset_path("main-menu", "pencil-icon.png"), size_hint_x=None, width=dp(26)))
+
+        # The pencil occupies the far-right control slot for <=3 players.
+        # For 4+ players it slides left to make room for the delete button.
+        self.pencil = Image(source=asset_path("main-menu", "pencil-icon.png"), size_hint_x=None, width=dp(26))
+        self.add_widget(self.pencil)
+
         self.delete_btn = RoundedButton(text="−", font_size="22sp", size_hint_x=None, width=dp(42), height=dp(28), radius=10, bg_color=COLORS.get("danger", (0.85, 0.08, 0.28, 1)))
         self.delete_btn.bind(on_release=self._delete)
         self.add_widget(self.delete_btn)
         self.number = number
+
+        # Start visually as the 3-player layout: pencil at the far right,
+        # delete button hidden until the fourth player is added.
+        self._layout_controls(False, animate=False)
 
     def _draw(self, *_):
         self.bg.pos = self.pos
@@ -63,6 +78,23 @@ class PlayerRow(BoxLayout):
     @property
     def player_name(self):
         return self.input.text.strip() or f"Player {self.number}"
+
+    def _layout_controls(self, can_delete, animate=True):
+        # Use width positioning rather than changing widget order. This keeps
+        # the text input stable while the pencil glides between its two slots.
+        self.delete_btn.disabled = not can_delete
+        target_opacity = 1 if can_delete else 0
+        target_pencil_x = -dp(8) if can_delete else 0
+
+        if animate:
+            Animation(x=target_pencil_x, duration=self.CONTROL_ANIMATION, t="out_quad").start(self.pencil)
+            Animation(opacity=target_opacity, duration=self.CONTROL_ANIMATION, t="out_quad").start(self.delete_btn)
+        else:
+            self.pencil.x = target_pencil_x
+            self.delete_btn.opacity = target_opacity
+
+    def set_delete_state(self, can_delete, animate=True):
+        self._layout_controls(can_delete, animate=animate)
 
 
 class TitleBadge(FloatLayout):
@@ -135,10 +167,11 @@ class MainMenuScreen(Screen):
     def add_player(self, *_):
         if len(self.rows) >= MAX_PLAYERS:
             return
+        was_three = len(self.rows) == 3
         row = PlayerRow(len(self.rows) + 1, delete_callback=self.remove_player)
         self.rows.append(row)
         self.player_box.add_widget(row)
-        self._refresh_player_controls()
+        self._refresh_player_controls(animate=was_three)
         self.player_scroll.scroll_y = 0
 
     def remove_player(self, row):
@@ -151,7 +184,7 @@ class MainMenuScreen(Screen):
             player_row.set_number(index)
         self._refresh_player_controls()
 
-    def _refresh_player_controls(self):
+    def _refresh_player_controls(self, animate=True):
         count = len(self.rows)
         at_max = count >= MAX_PLAYERS
         if at_max:
@@ -164,10 +197,10 @@ class MainMenuScreen(Screen):
             self.add_btn.disabled = False
             self.add_btn.bg_color = COLORS["card"]
             self.add_btn.border_color = COLORS["accent"]
+
         can_delete = count > 3
         for row in self.rows:
-            row.delete_btn.disabled = not can_delete
-            row.delete_btn.opacity = 1 if can_delete else 0
+            row.set_delete_state(can_delete, animate=animate)
 
     def play(self, *_):
         if self.morph.running:
