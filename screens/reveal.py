@@ -70,7 +70,6 @@ class PlainCurtain(Button):
         kwargs.setdefault("bold", True)
         kwargs.setdefault("halign", "center")
         kwargs.setdefault("valign", "middle")
-        kwargs.setdefault("font_name", "GameFont")
         super().__init__(**kwargs)
         with self.canvas.before:
             Color(*COLORS["card"])
