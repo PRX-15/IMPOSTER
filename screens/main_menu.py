@@ -84,8 +84,6 @@ class PlayerRow(BoxLayout):
         self.delete_btn.disabled = not can_delete
 
         if animate:
-            # Expanding the delete button makes BoxLayout move the pencil left.
-            # Both width and opacity use the exact same duration for a synchronized transition.
             Animation(width=target_width, opacity=target_opacity, duration=self.CONTROL_ANIMATION, t="out_quad").start(self.delete_btn)
         else:
             self.delete_btn.width = target_width
@@ -137,8 +135,8 @@ class MainMenuScreen(Screen):
         stack.add_widget(NeonLabel(text="ONE WORD. ONE FAKE. FIND THEM.", font_size="11sp", bold=True, color=COLORS["muted"], size_hint_y=None, height=dp(24)))
 
         self.player_card = PlayerListCard(size_hint_y=1)
-        self.player_scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False, bar_width=dp(4))
-        self.player_box = BoxLayout(orientation="vertical", spacing=dp(10), size_hint_y=None, padding=[0, 0, 0, dp(2)])
+        self.player_scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False, bar_width=dp(4), scroll_timeout=250)
+        self.player_box = BoxLayout(orientation="vertical", spacing=dp(10), size_hint_y=None, height=dp(3 * 58 + 2 * 10), padding=[0, 0, 0, dp(2)])
         self.player_box.bind(minimum_height=self.player_box.setter("height"))
         self.player_scroll.add_widget(self.player_box)
         self.player_card.add_widget(self.player_scroll)
@@ -170,7 +168,7 @@ class MainMenuScreen(Screen):
         self.rows.append(row)
         self.player_box.add_widget(row)
         self._refresh_player_controls(animate=was_three)
-        self.player_scroll.scroll_y = 0
+        self._update_player_scroll()
 
     def remove_player(self, row):
         if len(self.rows) <= 3:
@@ -181,6 +179,14 @@ class MainMenuScreen(Screen):
         for index, player_row in enumerate(self.rows, start=1):
             player_row.set_number(index)
         self._refresh_player_controls()
+        self._update_player_scroll()
+
+    def _update_player_scroll(self):
+        # The card should behave like a static list for 3–5 players. Enable
+        # vertical scrolling only once a 6th player makes the list exceed the card.
+        can_scroll = len(self.rows) > 5
+        self.player_scroll.do_scroll_y = can_scroll
+        self.player_scroll.scroll_y = 1 if can_scroll else 1
 
     def _refresh_player_controls(self, animate=True):
         count = len(self.rows)
