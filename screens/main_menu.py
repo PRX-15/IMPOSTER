@@ -50,18 +50,17 @@ class PlayerRow(BoxLayout):
         self.input = TextInput(text="", hint_text="Enter a name", multiline=False, background_color=(0, 0, 0, 0), foreground_color=COLORS["text"], hint_text_color=COLORS["muted"], cursor_color=COLORS["primary"], font_size="18sp", padding=[0, dp(14), 0, 0])
         self.add_widget(self.input)
 
-        # The pencil occupies the far-right control slot for <=3 players.
-        # For 4+ players it slides left to make room for the delete button.
+        # The pencil sits at the same right margin as the player icon's left margin
+        # when there are exactly 3 players. Once a 4th player is added, the delete
+        # button expands into its slot, naturally sliding the pencil left.
         self.pencil = Image(source=asset_path("main-menu", "pencil-icon.png"), size_hint_x=None, width=dp(26))
         self.add_widget(self.pencil)
 
-        self.delete_btn = RoundedButton(text="−", font_size="22sp", size_hint_x=None, width=dp(42), height=dp(28), radius=10, bg_color=COLORS.get("danger", (0.85, 0.08, 0.28, 1)))
+        self.delete_btn = RoundedButton(text="−", font_size="22sp", size_hint_x=None, width=0, height=dp(28), radius=10, bg_color=COLORS.get("danger", (0.85, 0.08, 0.28, 1)))
         self.delete_btn.bind(on_release=self._delete)
         self.add_widget(self.delete_btn)
         self.number = number
 
-        # Start visually as the 3-player layout: pencil at the far right,
-        # delete button hidden until the fourth player is added.
         self._layout_controls(False, animate=False)
 
     def _draw(self, *_):
@@ -80,17 +79,16 @@ class PlayerRow(BoxLayout):
         return self.input.text.strip() or f"Player {self.number}"
 
     def _layout_controls(self, can_delete, animate=True):
-        # Use width positioning rather than changing widget order. This keeps
-        # the text input stable while the pencil glides between its two slots.
-        self.delete_btn.disabled = not can_delete
+        target_width = dp(42) if can_delete else 0
         target_opacity = 1 if can_delete else 0
-        target_pencil_x = -dp(8) if can_delete else 0
+        self.delete_btn.disabled = not can_delete
 
         if animate:
-            Animation(x=target_pencil_x, duration=self.CONTROL_ANIMATION, t="out_quad").start(self.pencil)
-            Animation(opacity=target_opacity, duration=self.CONTROL_ANIMATION, t="out_quad").start(self.delete_btn)
+            # Expanding the delete button makes BoxLayout move the pencil left.
+            # Both width and opacity use the exact same duration for a synchronized transition.
+            Animation(width=target_width, opacity=target_opacity, duration=self.CONTROL_ANIMATION, t="out_quad").start(self.delete_btn)
         else:
-            self.pencil.x = target_pencil_x
+            self.delete_btn.width = target_width
             self.delete_btn.opacity = target_opacity
 
     def set_delete_state(self, can_delete, animate=True):
