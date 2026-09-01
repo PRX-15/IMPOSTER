@@ -73,7 +73,7 @@ class TitleBadge(FloatLayout):
             self.fill = RoundedRectangle(radius=[dp(26)])
             Color(COLORS["accent"][0], COLORS["accent"][1], COLORS["accent"][2], 0.92)
             self.border = Line(width=dp(1.7))
-        self.title = NeonLabel(text="IMPOSTER", font_size="40sp", bold=True, size_hint=(None, None))
+        self.title = NeonLabel(text="IMPOSTER", font_name="GameFont", font_size="40sp", bold=True, size_hint=(None, None))
         self.add_widget(self.title)
         self.bind(pos=self._draw, size=self._draw)
         self._draw()
