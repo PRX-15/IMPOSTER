@@ -4,18 +4,10 @@ from kivy.metrics import dp
 from kivy.properties import NumericProperty, ListProperty
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.core.text import LabelBase
 from kivy.graphics import Color, RoundedRectangle, Line
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 ASSET_DIR = ROOT_DIR / "assets"
-GAME_FONT = str(ASSET_DIR / "fonts" / "Matcha Mint.otf")
-
-# Register the game's display font once so every shared Kivy text widget can
-# use it consistently. Hindi text continues to use Android's Devanagari font
-# explicitly through hindi_markup().
-if Path(GAME_FONT).exists():
-    LabelBase.register(name="GameFont", fn_regular=GAME_FONT)
 
 # Android ROMs can ship different Noto Devanagari filenames.
 _DEVANAGARI_CANDIDATES = (
@@ -54,8 +46,6 @@ class NeonLabel(Label):
         kwargs.setdefault("color", COLORS["text"])
         kwargs.setdefault("halign", "center")
         kwargs.setdefault("valign", "middle")
-        if Path(GAME_FONT).exists():
-            kwargs.setdefault("font_name", "GameFont")
         super().__init__(**kwargs)
         self.bind(size=lambda *_: setattr(self, "text_size", self.size))
 
@@ -75,8 +65,6 @@ class RoundedButton(Button):
         kwargs.setdefault("color", COLORS["text"])
         kwargs.setdefault("bold", True)
         kwargs.setdefault("font_size", "18sp")
-        if Path(GAME_FONT).exists():
-            kwargs.setdefault("font_name", "GameFont")
         super().__init__(**kwargs)
 
         self.bg_color = bg_color or COLORS["card2"]
