@@ -4,10 +4,15 @@ from kivy.metrics import dp
 from kivy.properties import NumericProperty, ListProperty
 from kivy.uix.button import Button
 from kivy.uix.label import Label
+from kivy.core.text import LabelBase
 from kivy.graphics import Color, RoundedRectangle, Line
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 ASSET_DIR = ROOT_DIR / "assets"
+
+GAME_FONT = str(ASSET_DIR / "fonts" / "Matcha Mint.otf")
+if Path(GAME_FONT).exists():
+    LabelBase.register(name="GameFont", fn_regular=GAME_FONT)
 
 # Android ROMs can ship different Noto Devanagari filenames.
 _DEVANAGARI_CANDIDATES = (
