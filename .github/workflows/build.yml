@@ -7,11 +7,19 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+
+      - name: Checkout python-for-android fix
+        uses: actions/checkout@v4
+        with:
+          repository: kivy/python-for-android
+          ref: d2ee8c5
+          path: python-for-android
+
       - name: Build APK
         uses: digreatbrian/buildozer-action@v2
         with:
           python-version: 3.11
-          buildozer-cmd: buildozer -v android debug
+          buildozer-cmd: buildozer android clean && buildozer -v android debug
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
