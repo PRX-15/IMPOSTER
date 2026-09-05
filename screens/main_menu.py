@@ -7,6 +7,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
 from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
+from kivy.animation import Animation
 from kivy.graphics import Color, RoundedRectangle, Ellipse, Line
 
 from animations.screen_morph import ScreenMorph
@@ -33,6 +34,8 @@ class PlayerListCard(BoxLayout):
 
 
 class PlayerRow(BoxLayout):
+    CONTROL_ANIMATION = 0.24
+
     def __init__(self, number, delete_callback=None, **kwargs):
         super().__init__(orientation="horizontal", spacing=dp(8), padding=[dp(18), dp(6)], size_hint_y=None, height=dp(58), **kwargs)
         self.delete_callback = delete_callback
@@ -40,14 +43,25 @@ class PlayerRow(BoxLayout):
             Color(*COLORS["card2"])
             self.bg = RoundedRectangle(radius=[dp(24)])
         self.bind(pos=self._draw, size=self._draw)
-        self.add_widget(Image(source=asset_path("main-menu", "player-icon.png"), size_hint_x=None, width=dp(34)))
+
+        self.player_icon = Image(source=asset_path("main-menu", "player-icon.png"), size_hint_x=None, width=dp(34))
+        self.add_widget(self.player_icon)
+
         self.input = TextInput(text="", hint_text="Enter a name", multiline=False, background_color=(0, 0, 0, 0), foreground_color=COLORS["text"], hint_text_color=COLORS["muted"], cursor_color=COLORS["primary"], font_size="18sp", padding=[0, dp(14), 0, 0])
         self.add_widget(self.input)
-        self.add_widget(Image(source=asset_path("main-menu", "pencil-icon.png"), size_hint_x=None, width=dp(26)))
-        self.delete_btn = RoundedButton(text="−", font_size="22sp", size_hint_x=None, width=dp(42), height=dp(28), radius=10, bg_color=COLORS.get("danger", (0.85, 0.08, 0.28, 1)))
+
+        # The pencil sits at the same right margin as the player icon's left margin
+        # when there are exactly 3 players. Once a 4th player is added, the delete
+        # button expands into its slot, naturally sliding the pencil left.
+        self.pencil = Image(source=asset_path("main-menu", "pencil-icon.png"), size_hint_x=None, width=dp(26))
+        self.add_widget(self.pencil)
+
+        self.delete_btn = RoundedButton(text="−", font_size="22sp", size_hint_x=None, width=0, height=dp(28), radius=10, bg_color=COLORS.get("danger", (0.85, 0.08, 0.28, 1)))
         self.delete_btn.bind(on_release=self._delete)
         self.add_widget(self.delete_btn)
         self.number = number
+
+        self._layout_controls(False, animate=False)
 
     def _draw(self, *_):
         self.bg.pos = self.pos
@@ -63,6 +77,20 @@ class PlayerRow(BoxLayout):
     @property
     def player_name(self):
         return self.input.text.strip() or f"Player {self.number}"
+
+    def _layout_controls(self, can_delete, animate=True):
+        target_width = dp(42) if can_delete else 0
+        target_opacity = 1 if can_delete else 0
+        self.delete_btn.disabled = not can_delete
+
+        if animate:
+            Animation(width=target_width, opacity=target_opacity, duration=self.CONTROL_ANIMATION, t="out_quad").start(self.delete_btn)
+        else:
+            self.delete_btn.width = target_width
+            self.delete_btn.opacity = target_opacity
+
+    def set_delete_state(self, can_delete, animate=True):
+        self._layout_controls(can_delete, animate=animate)
 
 
 class TitleBadge(FloatLayout):
@@ -107,8 +135,8 @@ class MainMenuScreen(Screen):
         stack.add_widget(NeonLabel(text="ONE WORD. ONE FAKE. FIND THEM.", font_size="11sp", bold=True, color=COLORS["muted"], size_hint_y=None, height=dp(24)))
 
         self.player_card = PlayerListCard(size_hint_y=1)
-        self.player_scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False, bar_width=dp(4))
-        self.player_box = BoxLayout(orientation="vertical", spacing=dp(10), size_hint_y=None, padding=[0, 0, 0, dp(2)])
+        self.player_scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False, bar_width=dp(4), scroll_timeout=250)
+        self.player_box = BoxLayout(orientation="vertical", spacing=dp(10), size_hint_y=None, height=dp(3 * 58 + 2 * 10), padding=[0, 0, 0, dp(2)])
         self.player_box.bind(minimum_height=self.player_box.setter("height"))
         self.player_scroll.add_widget(self.player_box)
         self.player_card.add_widget(self.player_scroll)
@@ -135,11 +163,12 @@ class MainMenuScreen(Screen):
     def add_player(self, *_):
         if len(self.rows) >= MAX_PLAYERS:
             return
+        was_three = len(self.rows) == 3
         row = PlayerRow(len(self.rows) + 1, delete_callback=self.remove_player)
         self.rows.append(row)
         self.player_box.add_widget(row)
-        self._refresh_player_controls()
-        self.player_scroll.scroll_y = 0
+        self._refresh_player_controls(animate=was_three)
+        self._update_player_scroll()
 
     def remove_player(self, row):
         if len(self.rows) <= 3:
@@ -150,8 +179,16 @@ class MainMenuScreen(Screen):
         for index, player_row in enumerate(self.rows, start=1):
             player_row.set_number(index)
         self._refresh_player_controls()
+        self._update_player_scroll()
 
-    def _refresh_player_controls(self):
+    def _update_player_scroll(self):
+        # The card should behave like a static list for 3–5 players. Enable
+        # vertical scrolling only once a 6th player makes the list exceed the card.
+        can_scroll = len(self.rows) > 5
+        self.player_scroll.do_scroll_y = can_scroll
+        self.player_scroll.scroll_y = 1 if can_scroll else 1
+
+    def _refresh_player_controls(self, animate=True):
         count = len(self.rows)
         at_max = count >= MAX_PLAYERS
         if at_max:
@@ -164,10 +201,10 @@ class MainMenuScreen(Screen):
             self.add_btn.disabled = False
             self.add_btn.bg_color = COLORS["card"]
             self.add_btn.border_color = COLORS["accent"]
+
         can_delete = count > 3
         for row in self.rows:
-            row.delete_btn.disabled = not can_delete
-            row.delete_btn.opacity = 1 if can_delete else 0
+            row.set_delete_state(can_delete, animate=animate)
 
     def play(self, *_):
         if self.morph.running:
