@@ -14,6 +14,9 @@ jobs:
           cd python-for-android
           git checkout d2ee8c54d9d42375a95f18159e950a119671cf63
 
+      - name: Install python-for-android dependencies
+        run: python3 -m pip install -e ./python-for-android
+
       - name: Build APK
         uses: digreatbrian/buildozer-action@v2
         with:
