@@ -9,11 +9,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Checkout python-for-android fix
-        uses: actions/checkout@v4
-        with:
-          repository: kivy/python-for-android
-          ref: d2ee8c5
-          path: python-for-android
+        run: |
+          git clone https://github.com/kivy/python-for-android.git python-for-android
+          cd python-for-android
+          git checkout d2ee8c54d9d42375a95f18159e950a119671cf63
 
       - name: Build APK
         uses: digreatbrian/buildozer-action@v2
