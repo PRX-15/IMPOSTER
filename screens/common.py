@@ -1,5 +1,6 @@
 """Shared Kivy widgets and styling helpers."""
 from pathlib import Path
+from kivy.animation import Animation
 from kivy.metrics import dp
 from kivy.properties import NumericProperty, ListProperty
 from kivy.uix.button import Button
@@ -14,7 +15,6 @@ GAME_FONT = str(ASSET_DIR / "fonts" / "Matcha Mint.otf")
 if Path(GAME_FONT).exists():
     LabelBase.register(name="GameFont", fn_regular=GAME_FONT)
 
-# Android ROMs can ship different Noto Devanagari filenames.
 _DEVANAGARI_CANDIDATES = (
     Path("/system/fonts/NotoSansDevanagari-Regular.ttf"),
     Path("/system/fonts/NotoSansDevanagari-VF.ttf"),
@@ -56,12 +56,18 @@ class NeonLabel(Label):
 
 
 class RoundedButton(Button):
-    # These must be Kivy properties. The morph animation changes radius and
-    # colours every frame, and plain Python attributes would not redraw the
-    # canvas while Animation is running.
+    """Rounded Kivy button with a press-in effect and color-matched border glow."""
+
     bg_color = ListProperty(COLORS["card2"])
     border_color = ListProperty(COLORS["accent"])
     radius = NumericProperty(dp(22))
+    glow_opacity = NumericProperty(0.0)
+    press_scale = NumericProperty(1.0)
+
+    PRESS_IN_SCALE = 0.965
+    PRESS_DURATION = 0.09
+    RELEASE_DURATION = 0.14
+    GLOW_MAX = 0.82
 
     def __init__(self, bg_color=None, border_color=None, radius=22, **kwargs):
         kwargs.setdefault("background_normal", "")
@@ -82,17 +88,87 @@ class RoundedButton(Button):
             bg_color=self._draw,
             border_color=self._draw,
             radius=self._draw,
+            glow_opacity=self._draw,
+            press_scale=self._draw,
         )
+        self._base_pos = None
+        self._base_size = None
         self._draw()
 
     def _draw(self, *_):
+        # Keep the press effect centered around the button's original bounds.
+        if self._base_pos is None or self.state == "normal":
+            self._base_pos = tuple(self.pos)
+            self._base_size = tuple(self.size)
+
+        base_x, base_y = self._base_pos
+        base_w, base_h = self._base_size
+        scale = self.press_scale
+        draw_w = base_w * scale
+        draw_h = base_h * scale
+        draw_x = base_x + (base_w - draw_w) / 2
+        draw_y = base_y + (base_h - draw_h) / 2
+
         self.canvas.before.clear()
-        color = self.bg_color if self.state == "normal" else COLORS["accent"]
         with self.canvas.before:
-            Color(*color)
-            RoundedRectangle(pos=self.pos, size=self.size, radius=[self.radius])
+            if self.glow_opacity > 0:
+                # Several expanding, translucent outlines approximate a soft glow
+                # using Kivy's built-in canvas primitives only.
+                r, g, b, a = self.border_color
+                for spread, alpha_mul, width in (
+                    (dp(8), 0.10, dp(3.8)),
+                    (dp(5), 0.18, dp(3.0)),
+                    (dp(2), 0.32, dp(2.2)),
+                ):
+                    Color(r, g, b, a * self.glow_opacity * alpha_mul)
+                    Line(
+                        rounded_rectangle=[
+                            draw_x - spread / 2,
+                            draw_y - spread / 2,
+                            draw_w + spread,
+                            draw_h + spread,
+                            self.radius + spread / 2,
+                        ],
+                        width=width,
+                    )
+
+            fill = self.bg_color if self.state == "normal" else self.bg_color
+            Color(*fill)
+            RoundedRectangle(
+                pos=(draw_x, draw_y),
+                size=(draw_w, draw_h),
+                radius=[self.radius],
+            )
+
             Color(*self.border_color)
             Line(
-                rounded_rectangle=[self.x, self.y, self.width, self.height, self.radius],
-                width=dp(1.2),
+                rounded_rectangle=[draw_x, draw_y, draw_w, draw_h, self.radius],
+                width=dp(1.2) + dp(1.2) * self.glow_opacity,
             )
+
+    def on_touch_down(self, touch):
+        if self.disabled or not self.collide_point(*touch.pos):
+            return super().on_touch_down(touch)
+
+        Animation.cancel_all(self, "press_scale", "glow_opacity")
+        Animation(
+            press_scale=self.PRESS_IN_SCALE,
+            glow_opacity=self.GLOW_MAX,
+            duration=self.PRESS_DURATION,
+            t="out_quad",
+        ).start(self)
+        return super().on_touch_down(touch)
+
+    def on_touch_up(self, touch):
+        inside = self.collide_point(*touch.pos)
+        handled = super().on_touch_up(touch)
+
+        if not self.disabled:
+            Animation.cancel_all(self, "press_scale", "glow_opacity")
+            Animation(
+                press_scale=1.0,
+                glow_opacity=0.0,
+                duration=self.RELEASE_DURATION,
+                t="out_quad",
+            ).start(self)
+        return handled
