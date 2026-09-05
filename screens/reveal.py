@@ -40,7 +40,8 @@ class PlainCurtain(Button):
         super().__init__(**kwargs)
         with self.canvas.before:
             Color(*COLORS["card"]); self._background=Rectangle(pos=self.pos,size=self.size)
-        self.bind(pos=self._sync_background,size=self._sync_background,size=self._sync_text)
+        self.bind(pos=self._sync_background, size=self._sync_background)
+        self.bind(size=self._sync_text)
         self._sync_text()
     def _sync_background(self,*_): self._background.pos=self.pos; self._background.size=self.size
     def _sync_text(self,*_): self.text_size=self.size
