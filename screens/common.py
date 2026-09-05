@@ -8,30 +8,30 @@ from kivy.uix.label import Label
 from kivy.core.text import LabelBase
 from kivy.graphics import Color, RoundedRectangle, Line
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
-ASSET_DIR = ROOT_DIR / "assets"
-GAME_FONT = str(ASSET_DIR / "fonts" / "Matcha Mint.otf")
-if Path(GAME_FONT).exists(): LabelBase.register(name="GameFont", fn_regular=GAME_FONT)
+ROOT_DIR=Path(__file__).resolve().parents[1]
+ASSET_DIR=ROOT_DIR/"assets"
+GAME_FONT=str(ASSET_DIR/"fonts"/"Matcha Mint.otf")
+if Path(GAME_FONT).exists(): LabelBase.register(name="GameFont",fn_regular=GAME_FONT)
 _DEVANAGARI_CANDIDATES=(Path("/system/fonts/NotoSansDevanagari-Regular.ttf"),Path("/system/fonts/NotoSansDevanagari-VF.ttf"),Path("/system/fonts/NotoSansDevanagari-Regular.otf"),Path("/system/fonts/NotoSansDevanagari-VF.otf"))
 DEVANAGARI_FONT=next((str(p) for p in _DEVANAGARI_CANDIDATES if p.exists()),"")
 
-def hindi_markup(text: str) -> str:
+def hindi_markup(text: str)->str:
     if not DEVANAGARI_FONT:return text
     return f"[font={DEVANAGARI_FONT}]{text}[/font]"
 
 COLORS={"bg":(0.035,0.015,0.075,1),"card":(0.13,0.06,0.22,0.92),"card2":(0.20,0.08,0.32,0.95),"accent":(0.68,0.25,1,1),"primary":(1.0,0.12,0.38,1),"text":(0.96,0.92,1,1),"muted":(0.72,0.62,0.85,1)}
 
-def asset_path(*parts: str) -> str:return str(ASSET_DIR.joinpath(*parts))
+def asset_path(*parts:str)->str:return str(ASSET_DIR.joinpath(*parts))
 
 class NeonLabel(Label):
     def __init__(self,**kwargs):
         kwargs.setdefault("color",COLORS["text"]);kwargs.setdefault("halign","center");kwargs.setdefault("valign","middle");super().__init__(**kwargs);self.bind(size=lambda *_:setattr(self,"text_size",self.size))
 
 class RoundedButton(Button):
-    """Rounded Kivy button. Optional press feedback is entirely Kivy canvas/Animation."""
-    bg_color=ListProperty(COLORS["card2"]);border_color=ListProperty(COLORS["accent"]);radius=NumericProperty(dp(22));glow_opacity=NumericProperty(0.0);press_scale=NumericProperty(1.0);press_feedback=BooleanProperty(False)
+    """Rounded Kivy button with press-in, hold, release and matching border glow."""
+    bg_color=ListProperty(COLORS["card2"]);border_color=ListProperty(COLORS["accent"]);radius=NumericProperty(dp(22));glow_opacity=NumericProperty(0.0);press_scale=NumericProperty(1.0);press_feedback=BooleanProperty(True)
     PRESS_IN_SCALE=.965;PRESS_DURATION=.09;RELEASE_DURATION=.14;GLOW_MAX=.82
-    def __init__(self,bg_color=None,border_color=None,radius=22,press_feedback=False,**kwargs):
+    def __init__(self,bg_color=None,border_color=None,radius=22,press_feedback=True,**kwargs):
         kwargs.setdefault("background_normal","");kwargs.setdefault("background_down","");kwargs.setdefault("background_color",(0,0,0,0));kwargs.setdefault("color",COLORS["text"]);kwargs.setdefault("bold",True);kwargs.setdefault("font_size","18sp");super().__init__(**kwargs)
         self.bg_color=bg_color or COLORS["card2"];self.border_color=border_color or COLORS["accent"];self.radius=dp(radius);self.press_feedback=press_feedback
         self.bind(pos=self._draw,size=self._draw,state=self._draw,bg_color=self._draw,border_color=self._draw,radius=self._draw,glow_opacity=self._draw,press_scale=self._draw)
