@@ -45,15 +45,13 @@ class SwipeScreenManager(ScreenManager):
                     self._dragging = True
             if self._dragging:
                 menu, history = self._menu_history()
-                width = max(1, self.width)
-                progress = max(0, min(1, abs(dx) / width))
                 if self.current == "menu":
                     menu.x = dx
                     history.x = self.width + dx
                 else:
                     history.x = dx
                     menu.x = -self.width + dx
-                touch.ud["swipe_progress"] = progress
+                touch.ud["swipe_progress"] = max(0, min(1, abs(dx) / max(1, self.width)))
                 return True
         return super().on_touch_move(touch)
 
@@ -66,32 +64,24 @@ class SwipeScreenManager(ScreenManager):
             self._dragging = False
             if was_dragging:
                 if self.current == "menu":
-                    target_history = abs(dx) >= self.width * self.SWIPE_THRESHOLD
-                    self._finish_drag("history" if target_history else "menu")
+                    target = "history" if abs(dx) >= self.width * self.SWIPE_THRESHOLD else "menu"
                 else:
-                    target_menu = abs(dx) >= self.width * self.SWIPE_THRESHOLD
-                    self._finish_drag("menu" if target_menu else "history")
+                    target = "menu" if abs(dx) >= self.width * self.SWIPE_THRESHOLD else "history"
+                self._finish_drag(target, from_gesture=True)
                 return True
         return super().on_touch_up(touch)
 
-    def _finish_drag(self, target):
+    def _finish_drag(self, target, from_gesture=False):
         menu, history = self._menu_history()
         current = menu if self.current == "menu" else history
-        if target == "history":
-            incoming = history
-            target_current_x, target_incoming_x = -self.width, 0
-            incoming.x = self.width if current is menu else -self.width
-        else:
-            incoming = menu
-            target_current_x, target_incoming_x = self.width, 0
-            incoming.x = -self.width if current is history else self.width
+        incoming = history if target == "history" else menu
+        if not from_gesture:
+            incoming.x = self.width if target == "history" else -self.width
+        target_current_x = -self.width if target == "history" else self.width
         Animation.cancel_all(current, "x")
         Animation.cancel_all(incoming, "x")
-        anim = Animation(x=target_current_x, duration=.20, t="out_cubic")
-        anim &= Animation(x=target_incoming_x, duration=.20, t="out_cubic")
-        # Parallel animation objects target different widgets below.
         Animation(x=target_current_x, duration=.20, t="out_cubic").start(current)
-        final = Animation(x=target_incoming_x, duration=.20, t="out_cubic")
+        final = Animation(x=0, duration=.20, t="out_cubic")
         final.bind(on_complete=lambda *_: self._commit_menu_history(target))
         final.start(incoming)
 
@@ -100,22 +90,20 @@ class SwipeScreenManager(ScreenManager):
         menu, history = self._menu_history()
         menu.x = 0 if target == "menu" else -self.width
         history.x = 0 if target == "history" else self.width
-        if target == "menu":
-            menu.nav.set_active("home", animate=True)
-        else:
-            history.nav.set_active("history", animate=True)
+        if target == "menu": menu.nav.set_active("home", animate=True)
+        else: history.nav.set_active("history", animate=True)
 
     def show_home(self):
         if self.current == "menu":
             self.get_screen("menu").nav.set_active("home", animate=True)
-            return
-        self._finish_drag("menu")
+        else:
+            self._finish_drag("menu")
 
     def show_history(self):
         if self.current == "history":
             self.get_screen("history").nav.set_active("history", animate=True)
-            return
-        self._finish_drag("history")
+        else:
+            self._finish_drag("history")
 
 
 class ImposterApp(App):
