@@ -82,8 +82,9 @@ class GlassNavBar(BoxLayout):
         super().__init__(orientation="horizontal",spacing=dp(5),padding=[dp(6),dp(6)],size_hint=(None,None),width=dp(190),height=dp(72),**kwargs)
         self.on_home=on_home;self.on_history=on_history
         with self.canvas.before:
-            Color(1,1,1,.055);self.bg=RoundedRectangle(radius=[dp(30)])
-            Color(1,1,1,.72);self.border=Line(width=dp(1.05))
+            # Light translucent background so the black PNG icons remain visible.
+            Color(1,1,1,.88);self.bg=RoundedRectangle(radius=[dp(30)])
+            Color(1,1,1,.95);self.border=Line(width=dp(1.05))
             Color(COLORS["primary"][0],COLORS["primary"][1],COLORS["primary"][2],.34);self.indicator=RoundedRectangle(radius=[dp(25)])
         self.add_widget(NavTab(asset_path("main-menu","home-icon.png"),"HOME",self._home,size_hint_x=1))
         self.add_widget(NavTab(asset_path("main-menu","history-icon.png"),"HISTORY",self._history,size_hint_x=1))
