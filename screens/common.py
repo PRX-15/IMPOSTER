@@ -28,7 +28,7 @@ class NeonLabel(Label):
         kwargs.setdefault("color",COLORS["text"]);kwargs.setdefault("halign","center");kwargs.setdefault("valign","middle");super().__init__(**kwargs);self.bind(size=lambda *_:setattr(self,"text_size",self.size))
 
 class RoundedButton(Button):
-    """Rounded Kivy button with press-in, hold, and soft expansive halo glow."""
+    """Rounded Kivy button with press-in, hold, and a long soft colored halo glow."""
     bg_color=ListProperty(COLORS["card2"]);border_color=ListProperty(COLORS["accent"]);radius=NumericProperty(dp(22));press_scale=NumericProperty(1.0);glow_opacity=NumericProperty(0.0);press_feedback=BooleanProperty(True)
     PRESS_IN_SCALE=.965;PRESS_DURATION=.09;RELEASE_DURATION=.14;GLOW_MAX=.82
     def __init__(self,bg_color=None,border_color=None,radius=22,press_feedback=True,**kwargs):
@@ -43,10 +43,14 @@ class RoundedButton(Button):
         with self.canvas.before:
             if self.glow_opacity>0:
                 br,bg,bb,_=self.bg_color
-                # Lift the button's own fill toward white for the halo colour.
-                lr=br+(1-br)*.58;lg=bg+(1-bg)*.58;lb=bb+(1-bb)*.58
-                # Large, overlapping layers create a broad soft aura with no hard gap.
-                for spread,alpha_mul,width in ((dp(1),.42,dp(3.0)),(dp(4),.30,dp(3.4)),(dp(8),.22,dp(3.8)),(dp(12),.16,dp(4.2)),(dp(16),.11,dp(4.6)),(dp(20),.075,dp(5.0)),(dp(24),.045,dp(5.4))):
+                # Keep the hue of the button while only lifting brightness toward white.
+                # A modest lift preserves the button's theme instead of turning the glow white.
+                lift=.28
+                lr=br+(1-br)*lift;lg=bg+(1-bg)*lift;lb=bb+(1-bb)*lift
+                # Dense overlapping layers make the aura extend well outside the button
+                # and fade continuously without a visible gap or hard banding.
+                layers=((dp(1),.30,dp(2.5)),(dp(3),.25,dp(2.8)),(dp(5),.21,dp(3.0)),(dp(7),.18,dp(3.2)),(dp(9),.15,dp(3.4)),(dp(11),.125,dp(3.6)),(dp(13),.105,dp(3.8)),(dp(15),.085,dp(4.0)),(dp(17),.068,dp(4.2)),(dp(19),.052,dp(4.4)),(dp(21),.040,dp(4.6)),(dp(24),.029,dp(4.8)),(dp(27),.020,dp(5.0)),(dp(30),.013,dp(5.2)),(dp(34),.008,dp(5.4)))
+                for spread,alpha_mul,width in layers:
                     Color(lr,lg,lb,self.glow_opacity*alpha_mul)
                     Line(rounded_rectangle=[draw_x-spread/2,draw_y-spread/2,draw_w+spread,draw_h+spread,self.radius+spread/2],width=width)
             Color(*self.bg_color);RoundedRectangle(pos=(draw_x,draw_y),size=(draw_w,draw_h),radius=[self.radius]);Color(*self.border_color);Line(rounded_rectangle=[draw_x,draw_y,draw_w,draw_h,self.radius],width=dp(1.2))
