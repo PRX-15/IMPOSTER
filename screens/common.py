@@ -28,7 +28,7 @@ class NeonLabel(Label):
         kwargs.setdefault("color",COLORS["text"]);kwargs.setdefault("halign","center");kwargs.setdefault("valign","middle");super().__init__(**kwargs);self.bind(size=lambda *_:setattr(self,"text_size",self.size))
 
 class RoundedButton(Button):
-    """Rounded Kivy button with press-in, hold, release and matching border glow."""
+    """Rounded Kivy button with press-in, hold, release and soft matching outer glow."""
     bg_color=ListProperty(COLORS["card2"]);border_color=ListProperty(COLORS["accent"]);radius=NumericProperty(dp(22));glow_opacity=NumericProperty(0.0);press_scale=NumericProperty(1.0);press_feedback=BooleanProperty(True)
     PRESS_IN_SCALE=.965;PRESS_DURATION=.09;RELEASE_DURATION=.14;GLOW_MAX=.82
     def __init__(self,bg_color=None,border_color=None,radius=22,press_feedback=True,**kwargs):
@@ -43,9 +43,10 @@ class RoundedButton(Button):
         with self.canvas.before:
             if self.glow_opacity>0:
                 r,g,b,a=self.border_color
-                for spread,alpha_mul,width in ((dp(8),.10,dp(3.8)),(dp(5),.18,dp(3.0)),(dp(2),.32,dp(2.2))):
-                    Color(r,g,b,a*self.glow_opacity*alpha_mul);Line(rounded_rectangle=[draw_x-spread/2,draw_y-spread/2,draw_w+spread,draw_h+spread,self.radius+spread/2],width=width)
-            Color(*self.bg_color);RoundedRectangle(pos=(draw_x,draw_y),size=(draw_w,draw_h),radius=[self.radius]);Color(*self.border_color);Line(rounded_rectangle=[draw_x,draw_y,draw_w,draw_h,self.radius],width=dp(1.2)+dp(1.2)*self.glow_opacity)
+                lr=r+(1-r)*.45;lg=g+(1-g)*.45;lb=b+(1-b)*.45
+                for spread,alpha_mul,width in ((dp(1.2),.46,dp(2.8)),(dp(4),.30,dp(3.0)),(dp(7),.18,dp(3.2)),(dp(10),.09,dp(3.4))):
+                    Color(lr,lg,lb,a*self.glow_opacity*alpha_mul);Line(rounded_rectangle=[draw_x-spread/2,draw_y-spread/2,draw_w+spread,draw_h+spread,self.radius+spread/2],width=width)
+            Color(*self.bg_color);RoundedRectangle(pos=(draw_x,draw_y),size=(draw_w,draw_h),radius=[self.radius]);Color(*self.border_color);Line(rounded_rectangle=[draw_x,draw_y,draw_w,draw_h,self.radius],width=dp(1.2))
     def on_touch_down(self,touch):
         if self.press_feedback and not self.disabled and self.collide_point(*touch.pos):
             Animation.cancel_all(self,"press_scale","glow_opacity");Animation(press_scale=self.PRESS_IN_SCALE,glow_opacity=self.GLOW_MAX,duration=self.PRESS_DURATION,t="out_quad").start(self)
