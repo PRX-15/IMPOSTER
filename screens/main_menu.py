@@ -9,7 +9,6 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.animation import Animation
 from kivy.graphics import Color, RoundedRectangle, Ellipse, Line
-from kivy.core.window import Window
 
 from animations.screen_morph import ScreenMorph
 from game.game_logic import MAX_PLAYERS
@@ -34,51 +33,6 @@ class PlayerListCard(BoxLayout):
         self.border.rounded_rectangle = [self.x, self.y, self.width, self.height, dp(20)]
 
 
-class PlayerNameInput(TextInput):
-    """Player name field with stable Android keyboard focus switching."""
-
-    def _find_screen(self):
-        widget = self.parent
-        while widget is not None:
-            if hasattr(widget, "rows") and hasattr(widget, "_active_player_input"):
-                return widget
-            widget = widget.parent
-        return None
-
-    def on_focus(self, instance, value):
-        if value:
-            screen = self._find_screen()
-            if screen is not None:
-                screen._set_active_player_input(self)
-        return super().on_focus(instance, value)
-
-    def on_touch_down(self, touch):
-        if not self.collide_point(*touch.pos) or self.disabled:
-            return super().on_touch_down(touch)
-
-        screen = self._find_screen()
-        had_active_input = screen is not None and screen._active_player_input is not None and screen._active_player_input is not self
-        keyboard = None
-        if had_active_input:
-            keyboard = screen._active_player_input._keyboard
-
-        # Normal TextInput touch handling owns focus. We deliberately do not
-        # steal, replace, or rebind its keyboard here. Rebinding the same Android
-        # Keyboard object between TextInputs caused duplicate input delivery and
-        # occasional keyboard reopen failures.
-        result = super().on_touch_down(touch)
-
-        if had_active_input and keyboard is not None and self.focus:
-            # Let Kivy finish the focus transition first, then restore the IME
-            # target without explicitly requesting the keyboard again.
-            Clock.schedule_once(lambda _dt, s=screen, inp=self, kb=keyboard: s._finish_input_switch(inp, kb), 0)
-        elif self.focus:
-            # A normal fresh focus still gets Kivy's standard keyboard behavior.
-            Clock.schedule_once(lambda _dt, s=screen, inp=self: s._finish_fresh_input_focus(inp), 0)
-
-        return result
-
-
 class PlayerRow(BoxLayout):
     CONTROL_ANIMATION = 0.24
 
@@ -93,7 +47,17 @@ class PlayerRow(BoxLayout):
         self.player_icon = Image(source=asset_path("main-menu", "player-icon.png"), size_hint_x=None, width=dp(34))
         self.add_widget(self.player_icon)
 
-        self.input = PlayerNameInput(text="", hint_text="Enter a name", multiline=False, background_color=(0, 0, 0, 0), foreground_color=COLORS["text"], hint_text_color=COLORS["muted"], cursor_color=COLORS["primary"], font_size="18sp", padding=[0, dp(14), 0, 0])
+        self.input = TextInput(
+            text="",
+            hint_text="Enter a name",
+            multiline=False,
+            background_color=(0, 0, 0, 0),
+            foreground_color=COLORS["text"],
+            hint_text_color=COLORS["muted"],
+            cursor_color=COLORS["primary"],
+            font_size="18sp",
+            padding=[0, dp(14), 0, 0]
+        )
         self.add_widget(self.input)
 
         self.pencil = Image(source=asset_path("main-menu", "pencil-icon.png"), size_hint_x=None, width=dp(26))
@@ -161,7 +125,6 @@ class MainMenuScreen(Screen):
         super().__init__(**kwargs)
         self.state = state
         self.rows = []
-        self._active_player_input = None
         root = FloatLayout()
         with root.canvas.before:
             Color(*COLORS["bg"])
@@ -202,25 +165,6 @@ class MainMenuScreen(Screen):
         self.orb1.pos = (root.width - dp(115), root.height - dp(120))
         self.orb2.pos = (-dp(35), dp(70))
 
-    def _set_active_player_input(self, input_widget):
-        self._active_player_input = input_widget
-
-    def _finish_input_switch(self, input_widget, keyboard):
-        if self._active_player_input is not input_widget or not input_widget.focus:
-            return
-        # Keep the existing keyboard attached to the newly focused field. Do not
-        # call _show_keyboard() or keyboard() here; Android should not be told to
-        # reopen an IME that is already visible.
-        if input_widget._keyboard is not keyboard:
-            input_widget._keyboard = keyboard
-        if keyboard is not None:
-            keyboard.target = input_widget
-
-    def _finish_fresh_input_focus(self, input_widget):
-        if self._active_player_input is input_widget and input_widget.focus:
-            # No manual keyboard request: Kivy owns the normal first-focus path.
-            return
-
     def add_player(self, *_):
         if len(self.rows) >= MAX_PLAYERS:
             return
@@ -232,8 +176,6 @@ class MainMenuScreen(Screen):
         self._update_player_scroll()
 
     def remove_player(self, row):
-        if self._active_player_input is row.input:
-            self._active_player_input = None
         if len(self.rows) <= 3:
             return
         if row in self.rows:
