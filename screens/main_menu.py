@@ -54,8 +54,9 @@ class PlayerNameInput(TextInput):
                 previous = next((row.input for row in screen.rows if row.input is not self and row.input.focus), None)
                 if previous is not None and previous._keyboard is not None:
                     # Reuse the already-open Android keyboard instead of requesting
-                    # a new one. Requesting it again is what causes the visible
-                    # keyboard close/open animation when changing player rows.
+                    # a new one. Prevent the old field from releasing it during the
+                    # focus handoff.
+                    previous._requested_keyboard = False
                     self._keyboard = previous._keyboard
                     self._requested_keyboard = False
                     switching = True
