@@ -6,6 +6,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
 from kivy.uix.textinput import TextInput
+from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.scrollview import ScrollView
 from kivy.animation import Animation
 from kivy.graphics import Color, RoundedRectangle, Ellipse, Line
@@ -33,6 +34,67 @@ class PlayerListCard(BoxLayout):
         self.border.rounded_rectangle = [self.x, self.y, self.width, self.height, dp(20)]
 
 
+class PlayerNameInput(TextInput):
+    """TextInput that keeps the Android IME alive while switching player rows."""
+
+    def _find_screen(self):
+        widget = self.parent
+        while widget is not None:
+            if hasattr(widget, "_player_input_switching") and hasattr(widget, "rows"):
+                return widget
+            widget = widget.parent
+        return None
+
+    def on_touch_down(self, touch):
+        screen = None
+        switching = False
+        if self.collide_point(*touch.pos) and not self.disabled:
+            screen = self._find_screen()
+            if screen is not None:
+                previous = next((row.input for row in screen.rows if row.input is not self and row.input.focus), None)
+                if previous is not None and previous._keyboard is not None:
+                    # Reuse the already-open Android keyboard instead of requesting
+                    # a new one. Requesting it again is what causes the visible
+                    # keyboard close/open animation when changing player rows.
+                    self._keyboard = previous._keyboard
+                    self._requested_keyboard = False
+                    switching = True
+                    screen._player_input_switching = True
+
+        try:
+            result = super().on_touch_down(touch)
+        finally:
+            if switching and self._keyboard is not None:
+                self._keyboard.callback = self._keyboard_released
+                self._keyboard.target = self
+            if screen is not None:
+                Clock.schedule_once(lambda _dt, s=screen: setattr(s, "_player_input_switching", False), 0)
+        return result
+
+    def _unbind_keyboard(self):
+        keyboard = self._keyboard
+        screen = self._find_screen()
+        if keyboard is not None and screen is not None and screen._player_input_switching:
+            keyboard.unbind(on_key_down=self.keyboard_on_key_down, on_key_up=self.keyboard_on_key_up, on_textinput=self.keyboard_on_textinput)
+            self._requested_keyboard = False
+            FocusBehavior._keyboards[keyboard] = None
+            return
+        super()._unbind_keyboard()
+
+    def _keyboard_released(self):
+        keyboard = self._keyboard
+        screen = self._find_screen()
+        if screen is not None:
+            for row in screen.rows:
+                row_input = row.input
+                if row_input._keyboard is keyboard:
+                    row_input._keyboard = None
+                    row_input._requested_keyboard = False
+        self._keyboard = None
+        self._requested_keyboard = False
+        self.focus = False
+
+
 class PlayerRow(BoxLayout):
     CONTROL_ANIMATION = 0.24
 
@@ -47,7 +109,7 @@ class PlayerRow(BoxLayout):
         self.player_icon = Image(source=asset_path("main-menu", "player-icon.png"), size_hint_x=None, width=dp(34))
         self.add_widget(self.player_icon)
 
-        self.input = TextInput(text="", hint_text="Enter a name", multiline=False, background_color=(0, 0, 0, 0), foreground_color=COLORS["text"], hint_text_color=COLORS["muted"], cursor_color=COLORS["primary"], font_size="18sp", padding=[0, dp(14), 0, 0])
+        self.input = PlayerNameInput(text="", hint_text="Enter a name", multiline=False, background_color=(0, 0, 0, 0), foreground_color=COLORS["text"], hint_text_color=COLORS["muted"], cursor_color=COLORS["primary"], font_size="18sp", padding=[0, dp(14), 0, 0])
         self.add_widget(self.input)
 
         # The pencil sits at the same right margin as the player icon's left margin
@@ -120,6 +182,7 @@ class MainMenuScreen(Screen):
         super().__init__(**kwargs)
         self.state = state
         self.rows = []
+        self._player_input_switching = False
         root = FloatLayout()
         with root.canvas.before:
             Color(*COLORS["bg"])
