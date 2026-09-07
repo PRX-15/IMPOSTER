@@ -6,7 +6,7 @@ from kivy.properties import NumericProperty, ListProperty, BooleanProperty
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.core.text import LabelBase
-from kivy.graphics import Color, RoundedRectangle, Line, Ellipse
+from kivy.graphics import Color, RoundedRectangle, Line
 
 ROOT_DIR=Path(__file__).resolve().parents[1]
 ASSET_DIR=ROOT_DIR/"assets"
@@ -28,9 +28,9 @@ class NeonLabel(Label):
         kwargs.setdefault("color",COLORS["text"]);kwargs.setdefault("halign","center");kwargs.setdefault("valign","middle");super().__init__(**kwargs);self.bind(size=lambda *_:setattr(self,"text_size",self.size))
 
 class RoundedButton(Button):
-    """Rounded Kivy button with press-in, hold, release and soft outer glow."""
+    """Rounded Kivy button with press-in, hold, and soft expansive halo glow."""
     bg_color=ListProperty(COLORS["card2"]);border_color=ListProperty(COLORS["accent"]);radius=NumericProperty(dp(22));press_scale=NumericProperty(1.0);glow_opacity=NumericProperty(0.0);press_feedback=BooleanProperty(True)
-    PRESS_IN_SCALE=.965;PRESS_DURATION=.09;RELEASE_DURATION=.14
+    PRESS_IN_SCALE=.965;PRESS_DURATION=.09;RELEASE_DURATION=.14;GLOW_MAX=.82
     def __init__(self,bg_color=None,border_color=None,radius=22,press_feedback=True,**kwargs):
         kwargs.setdefault("background_normal","");kwargs.setdefault("background_down","");kwargs.setdefault("background_color",(0,0,0,0));kwargs.setdefault("color",COLORS["text"]);kwargs.setdefault("bold",True);kwargs.setdefault("font_size","18sp");super().__init__(**kwargs)
         self.bg_color=bg_color or COLORS["card2"];self.border_color=border_color or COLORS["accent"];self.radius=dp(radius);self.press_feedback=press_feedback
@@ -42,15 +42,17 @@ class RoundedButton(Button):
         self.canvas.before.clear()
         with self.canvas.before:
             if self.glow_opacity>0:
-                r,g,b,_=self.bg_color
-                lr=r+(1-r)*0.72;lg=g+(1-g)*0.72;lb=b+(1-b)*0.72
-                for spread,alpha_mul,width in ((dp(1.0),0.46,dp(2.8)),(dp(2.5),0.34,dp(2.7)),(dp(4.5),0.25,dp(2.6)),(dp(6.5),0.18,dp(2.5)),(dp(8.5),0.12,dp(2.4)),(dp(10.5),0.075,dp(2.3)),(dp(12.5),0.045,dp(2.2))):
+                br,bg,bb,_=self.bg_color
+                # Lift the button's own fill toward white for the halo colour.
+                lr=br+(1-br)*.58;lg=bg+(1-bg)*.58;lb=bb+(1-bb)*.58
+                # Large, overlapping layers create a broad soft aura with no hard gap.
+                for spread,alpha_mul,width in ((dp(1),.42,dp(3.0)),(dp(4),.30,dp(3.4)),(dp(8),.22,dp(3.8)),(dp(12),.16,dp(4.2)),(dp(16),.11,dp(4.6)),(dp(20),.075,dp(5.0)),(dp(24),.045,dp(5.4))):
                     Color(lr,lg,lb,self.glow_opacity*alpha_mul)
                     Line(rounded_rectangle=[draw_x-spread/2,draw_y-spread/2,draw_w+spread,draw_h+spread,self.radius+spread/2],width=width)
             Color(*self.bg_color);RoundedRectangle(pos=(draw_x,draw_y),size=(draw_w,draw_h),radius=[self.radius]);Color(*self.border_color);Line(rounded_rectangle=[draw_x,draw_y,draw_w,draw_h,self.radius],width=dp(1.2))
     def on_touch_down(self,touch):
         if self.press_feedback and not self.disabled and self.collide_point(*touch.pos):
-            Animation.cancel_all(self,"press_scale","glow_opacity");Animation(press_scale=self.PRESS_IN_SCALE,glow_opacity=1.0,duration=self.PRESS_DURATION,t="out_quad").start(self)
+            Animation.cancel_all(self,"press_scale","glow_opacity");Animation(press_scale=self.PRESS_IN_SCALE,glow_opacity=self.GLOW_MAX,duration=self.PRESS_DURATION,t="out_quad").start(self)
         return super().on_touch_down(touch)
     def on_touch_up(self,touch):
         handled=super().on_touch_up(touch)
