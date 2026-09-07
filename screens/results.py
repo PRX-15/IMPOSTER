@@ -8,23 +8,18 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, RoundedRectangle, Line
-
 from animations.screen_morph import ScreenMorph
 from game.history import HistoryDB
 from .common import COLORS, NeonLabel, RoundedButton, hindi_markup
 
-
 class RoundedCard(BoxLayout):
-    bg_color = ListProperty(COLORS["card"])
-    border_color = ListProperty(COLORS["accent"])
-    radius = dp(20)
-    def __init__(self, **kwargs):
+    bg_color=ListProperty(COLORS["card"]);border_color=ListProperty(COLORS["accent"]);radius=dp(20)
+    def __init__(self,**kwargs):
         super().__init__(**kwargs);self.padding=kwargs.get("padding",[dp(16),dp(12)]);self.spacing=kwargs.get("spacing",dp(8))
         with self.canvas.before:
             Color(*self.bg_color);self.background=RoundedRectangle(radius=[self.radius]);Color(*self.border_color);self.border=Line(width=dp(1.0))
         self.bind(pos=self._draw,size=self._draw);self._draw()
     def _draw(self,*_):self.background.pos,self.background.size=self.pos,self.size;self.border.rounded_rectangle=[self.x,self.y,self.width,self.height,self.radius]
-
 
 class VoteRow(BoxLayout):
     def __init__(self,name,votes,maximum_votes,highlighted=False,**kwargs):
@@ -35,10 +30,8 @@ class VoteRow(BoxLayout):
     def _draw(self,*_):
         self.track.pos=(self.bar_host.x,self.bar_host.y+dp(9));self.track.size=(self.bar_host.width,dp(12));ratio=0 if self.maximum_votes<=0 else self.votes/self.maximum_votes;self.fill.pos=self.track.pos;self.fill.size=(self.bar_host.width*ratio,dp(12))
 
-
 class ResultsScreen(Screen):
-    def __init__(self,state,**kwargs):
-        super().__init__(**kwargs);self.state=state;self.root=FloatLayout();self.add_widget(self.root);self.morph=ScreenMorph(self)
+    def __init__(self,state,**kwargs):super().__init__(**kwargs);self.state=state;self.root=FloatLayout();self.add_widget(self.root);self.morph=ScreenMorph(self)
     def on_pre_enter(self):self.build()
     def _build_round_info(self,word,word_hi,category,category_hi):
         card=RoundedCard(size_hint_y=None,height=dp(116),padding=[dp(10),dp(9)],spacing=0);left=BoxLayout(orientation="vertical",size_hint_x=.48,spacing=0);left.add_widget(NeonLabel(text="WORD",font_size="11sp",bold=True,color=COLORS["muted"],size_hint_y=.22));left.add_widget(NeonLabel(text=word,font_size="17sp",bold=True,size_hint_y=.43));left.add_widget(NeonLabel(markup=True,text=hindi_markup(word_hi),font_size="13sp",color=COLORS["muted"],size_hint_y=.35));divider_host=FloatLayout(size_hint_x=None,width=dp(1))
@@ -64,5 +57,5 @@ class ResultsScreen(Screen):
         self.state.start_round(self.state.players);reveal=self.manager.get_screen("reveal");reveal.build_turn();self.morph.start(self.again_btn,reveal,on_handoff=lambda:Clock.schedule_once(lambda _dt:reveal.start_entrance_animation(),0))
     def menu(self,*_):
         if self.state.history_rounds:
-            db=HistoryDB(os.path.join(App.get_running_app().user_data_dir,"game_data.db"));db.save_game(self.state.players,self.state.scores,self.state.history_rounds);self.state.history_rounds.clear()
+            db=HistoryDB(os.path.join(App.get_running_app().user_data_dir,"game_data.db"));db.save_game(self.state.players,self.state.scores,self.state.history_rounds,self.state.game_started_at);self.state.history_rounds.clear()
         self.state.reset_to_menu();self.manager.current="menu"
