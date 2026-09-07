@@ -6,10 +6,10 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
 from kivy.uix.textinput import TextInput
-from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.scrollview import ScrollView
 from kivy.animation import Animation
 from kivy.graphics import Color, RoundedRectangle, Ellipse, Line
+from kivy.core.window import Window
 
 from animations.screen_morph import ScreenMorph
 from game.game_logic import MAX_PLAYERS
@@ -35,65 +35,48 @@ class PlayerListCard(BoxLayout):
 
 
 class PlayerNameInput(TextInput):
-    """TextInput that keeps the Android IME alive while switching player rows."""
+    """Player name field with stable Android keyboard focus switching."""
 
     def _find_screen(self):
         widget = self.parent
         while widget is not None:
-            if hasattr(widget, "_player_input_switching") and hasattr(widget, "rows"):
+            if hasattr(widget, "rows") and hasattr(widget, "_active_player_input"):
                 return widget
             widget = widget.parent
         return None
 
-    def on_touch_down(self, touch):
-        screen = None
-        switching = False
-        if self.collide_point(*touch.pos) and not self.disabled:
+    def on_focus(self, instance, value):
+        if value:
             screen = self._find_screen()
             if screen is not None:
-                previous = next((row.input for row in screen.rows if row.input is not self and row.input.focus), None)
-                if previous is not None and previous._keyboard is not None:
-                    # Reuse the already-open Android keyboard instead of requesting
-                    # a new one. Prevent the old field from releasing it during the
-                    # focus handoff.
-                    previous._requested_keyboard = False
-                    self._keyboard = previous._keyboard
-                    self._requested_keyboard = False
-                    switching = True
-                    screen._player_input_switching = True
+                screen._set_active_player_input(self)
+        return super().on_focus(instance, value)
 
-        try:
-            result = super().on_touch_down(touch)
-        finally:
-            if switching and self._keyboard is not None:
-                self._keyboard.callback = self._keyboard_released
-                self._keyboard.target = self
-            if screen is not None:
-                Clock.schedule_once(lambda _dt, s=screen: setattr(s, "_player_input_switching", False), 0)
+    def on_touch_down(self, touch):
+        if not self.collide_point(*touch.pos) or self.disabled:
+            return super().on_touch_down(touch)
+
+        screen = self._find_screen()
+        had_active_input = screen is not None and screen._active_player_input is not None and screen._active_player_input is not self
+        keyboard = None
+        if had_active_input:
+            keyboard = screen._active_player_input._keyboard
+
+        # Normal TextInput touch handling owns focus. We deliberately do not
+        # steal, replace, or rebind its keyboard here. Rebinding the same Android
+        # Keyboard object between TextInputs caused duplicate input delivery and
+        # occasional keyboard reopen failures.
+        result = super().on_touch_down(touch)
+
+        if had_active_input and keyboard is not None and self.focus:
+            # Let Kivy finish the focus transition first, then restore the IME
+            # target without explicitly requesting the keyboard again.
+            Clock.schedule_once(lambda _dt, s=screen, inp=self, kb=keyboard: s._finish_input_switch(inp, kb), 0)
+        elif self.focus:
+            # A normal fresh focus still gets Kivy's standard keyboard behavior.
+            Clock.schedule_once(lambda _dt, s=screen, inp=self: s._finish_fresh_input_focus(inp), 0)
+
         return result
-
-    def _unbind_keyboard(self):
-        keyboard = self._keyboard
-        screen = self._find_screen()
-        if keyboard is not None and screen is not None and screen._player_input_switching:
-            keyboard.unbind(on_key_down=self.keyboard_on_key_down, on_key_up=self.keyboard_on_key_up, on_textinput=self.keyboard_on_textinput)
-            self._requested_keyboard = False
-            FocusBehavior._keyboards[keyboard] = None
-            return
-        super()._unbind_keyboard()
-
-    def _keyboard_released(self):
-        keyboard = self._keyboard
-        screen = self._find_screen()
-        if screen is not None:
-            for row in screen.rows:
-                row_input = row.input
-                if row_input._keyboard is keyboard:
-                    row_input._keyboard = None
-                    row_input._requested_keyboard = False
-        self._keyboard = None
-        self._requested_keyboard = False
-        self.focus = False
 
 
 class PlayerRow(BoxLayout):
@@ -113,9 +96,6 @@ class PlayerRow(BoxLayout):
         self.input = PlayerNameInput(text="", hint_text="Enter a name", multiline=False, background_color=(0, 0, 0, 0), foreground_color=COLORS["text"], hint_text_color=COLORS["muted"], cursor_color=COLORS["primary"], font_size="18sp", padding=[0, dp(14), 0, 0])
         self.add_widget(self.input)
 
-        # The pencil sits at the same right margin as the player icon's left margin
-        # when there are exactly 3 players. Once a 4th player is added, the delete
-        # button expands into its slot, naturally sliding the pencil left.
         self.pencil = Image(source=asset_path("main-menu", "pencil-icon.png"), size_hint_x=None, width=dp(26))
         self.add_widget(self.pencil)
 
@@ -123,7 +103,6 @@ class PlayerRow(BoxLayout):
         self.delete_btn.bind(on_release=self._delete)
         self.add_widget(self.delete_btn)
         self.number = number
-
         self._layout_controls(False, animate=False)
 
     def _draw(self, *_):
@@ -145,7 +124,6 @@ class PlayerRow(BoxLayout):
         target_width = dp(42) if can_delete else 0
         target_opacity = 1 if can_delete else 0
         self.delete_btn.disabled = not can_delete
-
         if animate:
             Animation(width=target_width, opacity=target_opacity, duration=self.CONTROL_ANIMATION, t="out_quad").start(self.delete_btn)
         else:
@@ -183,7 +161,7 @@ class MainMenuScreen(Screen):
         super().__init__(**kwargs)
         self.state = state
         self.rows = []
-        self._player_input_switching = False
+        self._active_player_input = None
         root = FloatLayout()
         with root.canvas.before:
             Color(*COLORS["bg"])
@@ -224,6 +202,25 @@ class MainMenuScreen(Screen):
         self.orb1.pos = (root.width - dp(115), root.height - dp(120))
         self.orb2.pos = (-dp(35), dp(70))
 
+    def _set_active_player_input(self, input_widget):
+        self._active_player_input = input_widget
+
+    def _finish_input_switch(self, input_widget, keyboard):
+        if self._active_player_input is not input_widget or not input_widget.focus:
+            return
+        # Keep the existing keyboard attached to the newly focused field. Do not
+        # call _show_keyboard() or keyboard() here; Android should not be told to
+        # reopen an IME that is already visible.
+        if input_widget._keyboard is not keyboard:
+            input_widget._keyboard = keyboard
+        if keyboard is not None:
+            keyboard.target = input_widget
+
+    def _finish_fresh_input_focus(self, input_widget):
+        if self._active_player_input is input_widget and input_widget.focus:
+            # No manual keyboard request: Kivy owns the normal first-focus path.
+            return
+
     def add_player(self, *_):
         if len(self.rows) >= MAX_PLAYERS:
             return
@@ -235,6 +232,8 @@ class MainMenuScreen(Screen):
         self._update_player_scroll()
 
     def remove_player(self, row):
+        if self._active_player_input is row.input:
+            self._active_player_input = None
         if len(self.rows) <= 3:
             return
         if row in self.rows:
@@ -246,11 +245,9 @@ class MainMenuScreen(Screen):
         self._update_player_scroll()
 
     def _update_player_scroll(self):
-        # The card should behave like a static list for 3–5 players. Enable
-        # vertical scrolling only once a 6th player makes the list exceed the card.
         can_scroll = len(self.rows) > 5
         self.player_scroll.do_scroll_y = can_scroll
-        self.player_scroll.scroll_y = 1 if can_scroll else 1
+        self.player_scroll.scroll_y = 1
 
     def _refresh_player_controls(self, animate=True):
         count = len(self.rows)
