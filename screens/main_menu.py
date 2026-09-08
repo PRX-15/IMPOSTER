@@ -70,8 +70,9 @@ class TitleBadge(FloatLayout):
 class NavTab(ButtonBehavior, FloatLayout):
     def __init__(self, icon, text, callback, **kwargs):
         super().__init__(**kwargs); self.callback=callback
-        self.add_widget(Image(source=icon,size_hint=(None,None),size=(dp(25),dp(25)),pos_hint={"center_x":.5,"center_y":.63}))
-        self.add_widget(NeonLabel(text=text,font_size="10sp",color=COLORS["muted"],size_hint=(1,None),height=dp(20),pos_hint={"x":0,"y":.04}))
+        self.icon = Image(source=icon,size_hint=(None,None),size=(dp(34),dp(34)),pos_hint={"center_x":.5,"center_y":.65})
+        self.label = NeonLabel(text=text,font_size="10sp",color=COLORS["muted"],size_hint=(1,None),height=dp(20),pos_hint={"x":0,"y":.035})
+        self.add_widget(self.icon); self.add_widget(self.label)
     def on_release(self):
         if self.callback: self.callback()
 
@@ -80,21 +81,28 @@ class GlassNavBar(BoxLayout):
     indicator_x=NumericProperty(0)
     def __init__(self,on_home,on_history,active="home",**kwargs):
         super().__init__(orientation="horizontal",spacing=dp(5),padding=[dp(6),dp(6)],size_hint=(None,None),width=dp(190),height=dp(72),**kwargs)
-        self.on_home=on_home;self.on_history=on_history
+        self.on_home=on_home;self.on_history=on_history;self.active_tab=active
         with self.canvas.before:
-            # Light translucent background so the black PNG icons remain visible.
-            Color(1,1,1,.88);self.bg=RoundedRectangle(radius=[dp(30)])
-            Color(1,1,1,.95);self.border=Line(width=dp(1.05))
+            # Translucent white glass: background objects remain subtly visible.
+            Color(1,1,1,.46);self.bg=RoundedRectangle(radius=[dp(30)])
+            Color(1,1,1,.78);self.border=Line(width=dp(1.1))
             Color(COLORS["primary"][0],COLORS["primary"][1],COLORS["primary"][2],.34);self.indicator=RoundedRectangle(radius=[dp(25)])
-        self.add_widget(NavTab(asset_path("main-menu","home-icon.png"),"HOME",self._home,size_hint_x=1))
-        self.add_widget(NavTab(asset_path("main-menu","history-icon.png"),"HISTORY",self._history,size_hint_x=1))
-        self.bind(pos=self._draw,size=self._draw);Clock.schedule_once(lambda *_: self.set_active(active,False),0)
+        self.home_tab=NavTab(asset_path("main-menu","home-icon.png"),"HOME",self._home,size_hint_x=1)
+        self.history_tab=NavTab(asset_path("main-menu","history-icon.png"),"HISTORY",self._history,size_hint_x=1)
+        self.add_widget(self.home_tab);self.add_widget(self.history_tab)
+        self.bind(pos=self._draw,size=self._draw)
+        Clock.schedule_once(lambda *_: self._sync_initial_active(),0)
+        Clock.schedule_once(lambda *_: self._sync_initial_active(),.15)
     def _draw(self,*_):
-        self.bg.pos,self.bg.size=self.pos,self.size;self.border.rounded_rectangle=[self.x,self.y,self.width,self.height,dp(30)];self.indicator.pos=(self.indicator_x,self.y+dp(6));self.indicator.size=(self.width/2-dp(8),self.height-dp(12))
+        self.bg.pos,self.bg.size=self.pos,self.size;self.border.rounded_rectangle=[self.x,self.y,self.width,self.height,dp(30)];self.indicator.pos=(self.indicator_x,self.y+dp(5));self.indicator.size=(self.width/2-dp(7),self.height-dp(10))
+    def _sync_initial_active(self): self.set_active(self.active_tab,False)
     def set_active(self,active,animate=True):
+        self.active_tab=active
         target=self.x+dp(6) if active=="home" else self.x+self.width/2+dp(1)
-        if animate: Animation(indicator_x=target,duration=.22,t="out_cubic").start(self)
-        else: self.indicator_x=target
+        if animate:
+            Animation.cancel_all(self,"indicator_x")
+            Animation(indicator_x=target,duration=.28,t="out_cubic").start(self)
+        else:self.indicator_x=target
         self._draw()
     def _home(self): self.set_active("home");self.on_home()
     def _history(self): self.set_active("history");self.on_history()
@@ -123,7 +131,7 @@ class MainMenuScreen(Screen):
         if row in self.rows:self.rows.remove(row);self.player_box.remove_widget(row)
         for i,r in enumerate(self.rows,1):r.set_number(i)
         self._refresh_player_controls();self._update_player_scroll()
-    def _update_player_scroll(self):self.player_scroll.do_scroll_y=len(self.rows)>5;self.player_scroll.scroll_y=1
+    def _update_player_scroll(self):self.player_scroll.do_scroll_y=len(self.rows)>3;self.player_scroll.scroll_y=1
     def _refresh_player_controls(self,animate=True):
         count=len(self.rows)
         if count>=MAX_PLAYERS:self.add_btn.opacity=1;self.add_btn.disabled=True;self.add_btn.bg_color=(.12,.12,.16,1);self.add_btn.border_color=(.38,.38,.44,1)
