@@ -1,5 +1,6 @@
 """IMPOSTER Kivy app entry point."""
 from kivy.app import App
+from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.uix.screenmanager import ScreenManager, NoTransition
 from kivy.animation import Animation
@@ -31,13 +32,19 @@ class SwipeScreenManager(ScreenManager):
         return self.get_screen("menu"), self.get_screen("history")
 
     def _sync_nav_for_current(self, *_):
-        # Keep the active pill correct even when another screen sets
-        # manager.current directly (for example Results -> Main Menu).
         if not self.has_screen("menu") or not self.has_screen("history"):
             return
         if self.current == "menu":
             self.get_screen("menu").nav.set_active("home", animate=False)
         elif self.current == "history":
+            self.get_screen("history").nav.set_active("history", animate=False)
+
+    def sync_initial_nav(self):
+        """Force the correct active tab after every screen has been registered."""
+        if self.has_screen("menu") and self.has_screen("history"):
+            if self.current != "history":
+                self.current = "menu"
+            self.get_screen("menu").nav.set_active("home", animate=False)
             self.get_screen("history").nav.set_active("history", animate=False)
 
     def on_touch_down(self, touch):
@@ -134,6 +141,9 @@ class ImposterApp(App):
             ResultsScreen(self.state, name="results"),
         ):
             manager.add_widget(screen)
+        manager.sync_initial_nav()
+        Clock.schedule_once(lambda _dt: manager.sync_initial_nav(), 0)
+        Clock.schedule_once(lambda _dt: manager.sync_initial_nav(), .10)
         return manager
 
 
