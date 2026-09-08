@@ -42,8 +42,6 @@ class SwipeScreenManager(ScreenManager):
     def sync_initial_nav(self):
         """Force the correct active tab after every screen has been registered."""
         if self.has_screen("menu") and self.has_screen("history"):
-            if self.current != "history":
-                self.current = "menu"
             self.get_screen("menu").nav.set_active("home", animate=False)
             self.get_screen("history").nav.set_active("history", animate=False)
 
@@ -108,8 +106,10 @@ class SwipeScreenManager(ScreenManager):
         menu, history = self._menu_history()
         menu.x = 0 if target == "menu" else -self.width
         history.x = 0 if target == "history" else self.width
-        if target == "menu": menu.nav.set_active("home", animate=True)
-        else: history.nav.set_active("history", animate=True)
+        if target == "menu":
+            menu.nav.set_active("home", animate=True)
+        else:
+            history.nav.set_active("history", animate=True)
 
     def show_home(self):
         if self.current == "menu":
