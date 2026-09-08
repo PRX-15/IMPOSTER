@@ -68,10 +68,10 @@ class TitleBadge(FloatLayout):
 
 
 class NavTab(ButtonBehavior, FloatLayout):
-    def __init__(self, icon, text, callback, icon_size=dp(38), **kwargs):
+    def __init__(self, icon, text, callback, icon_size=dp(34), **kwargs):
         super().__init__(**kwargs); self.callback=callback
         self.icon = Image(source=icon,size_hint=(None,None),size=(icon_size,icon_size),pos_hint={"center_x":.5,"center_y":.68})
-        self.label = NeonLabel(text=text,font_size="10sp",bold=True,color=(0.30,0.20,0.43,1),size_hint=(1,None),height=dp(20),pos_hint={"x":0,"y":.01})
+        self.label = NeonLabel(text=text,font_size="10sp",bold=True,color=(0.15,0.08,0.24,1),size_hint=(1,None),height=dp(20),pos_hint={"x":0,"y":.01})
         self.add_widget(self.icon); self.add_widget(self.label)
     def on_release(self):
         if self.callback: self.callback()
