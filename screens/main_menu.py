@@ -68,10 +68,10 @@ class TitleBadge(FloatLayout):
 
 
 class NavTab(ButtonBehavior, FloatLayout):
-    def __init__(self, icon, text, callback, **kwargs):
+    def __init__(self, icon, text, callback, icon_size=dp(38), **kwargs):
         super().__init__(**kwargs); self.callback=callback
-        self.icon = Image(source=icon,size_hint=(None,None),size=(dp(44),dp(44)),pos_hint={"center_x":.5,"center_y":.68})
-        self.label = NeonLabel(text=text,font_size="10sp",bold=True,color=(0.28,0.19,0.40,1),size_hint=(1,None),height=dp(20),pos_hint={"x":0,"y":.008})
+        self.icon = Image(source=icon,size_hint=(None,None),size=(icon_size,icon_size),pos_hint={"center_x":.5,"center_y":.68})
+        self.label = NeonLabel(text=text,font_size="10sp",bold=True,color=(0.30,0.20,0.43,1),size_hint=(1,None),height=dp(20),pos_hint={"x":0,"y":.01})
         self.add_widget(self.icon); self.add_widget(self.label)
     def on_release(self):
         if self.callback: self.callback()
@@ -86,17 +86,14 @@ class GlassNavBar(BoxLayout):
             Color(1,1,1,.30);self.bg=RoundedRectangle(radius=[dp(36)])
             Color(1,1,1,.72);self.border=Line(width=dp(1.1))
             Color(COLORS["primary"][0],COLORS["primary"][1],COLORS["primary"][2],.34);self.indicator=RoundedRectangle(radius=[dp(31)])
-        self.home_tab=NavTab(asset_path("main-menu","home-icon.png"),"HOME",self._home,size_hint_x=1)
-        self.history_tab=NavTab(asset_path("main-menu","history-icon.png"),"HISTORY",self._history,size_hint_x=1)
+        self.home_tab=NavTab(asset_path("main-menu","home-icon.png"),"HOME",self._home,icon_size=dp(46),size_hint_x=1)
+        self.history_tab=NavTab(asset_path("main-menu","history-icon.png"),"HISTORY",self._history,icon_size=dp(34),size_hint_x=1)
         self.add_widget(self.home_tab);self.add_widget(self.history_tab)
         self.bind(pos=self._draw,size=self._draw)
         Clock.schedule_once(lambda *_: self._sync_initial_active(),0)
         Clock.schedule_once(lambda *_: self._sync_initial_active(),.05)
-    def _draw(self,*_):
-        self.bg.pos,self.bg.size=self.pos,self.size;self.border.rounded_rectangle=[self.x,self.y,self.width,self.height,dp(36)];self.indicator.pos=(self.indicator_x,self.y+dp(5));self.indicator.size=(self.width/2-dp(7),self.height-dp(10))
-    def _sync_initial_active(self):
-        self.indicator_x=self.x+dp(6) if self.active_tab=="home" else self.x+self.width/2+dp(1)
-        self._draw()
+    def _draw(self,*_):self.bg.pos,self.bg.size=self.pos,self.size;self.border.rounded_rectangle=[self.x,self.y,self.width,self.height,dp(36)];self.indicator.pos=(self.indicator_x,self.y+dp(5));self.indicator.size=(self.width/2-dp(7),self.height-dp(10))
+    def _sync_initial_active(self):self.indicator_x=self.x+dp(6) if self.active_tab=="home" else self.x+self.width/2+dp(1);self._draw()
     def set_active(self,active,animate=True):
         self.active_tab=active;target=self.x+dp(6) if active=="home" else self.x+self.width/2+dp(1)
         if animate:
