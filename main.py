@@ -31,19 +31,26 @@ class SwipeScreenManager(ScreenManager):
     def _menu_history(self):
         return self.get_screen("menu"), self.get_screen("history")
 
+    def _set_nav(self, screen_name, tab):
+        screen = self.get_screen(screen_name)
+        nav = getattr(screen, "nav", None)
+        if nav is not None:
+            nav.set_active(tab, animate=False)
+
     def _sync_nav_for_current(self, *_):
-        if not self.has_screen("menu") or not self.has_screen("history"):
+        if not self.has_screen("menu"):
             return
         if self.current == "menu":
-            self.get_screen("menu").nav.set_active("home", animate=False)
-        elif self.current == "history":
-            self.get_screen("history").nav.set_active("history", animate=False)
+            self._set_nav("menu", "home")
+        elif self.current == "history" and self.has_screen("history"):
+            self._set_nav("history", "history")
 
     def sync_initial_nav(self):
-        """Force the correct active tab after every screen has been registered."""
-        if self.has_screen("menu") and self.has_screen("history"):
-            self.get_screen("menu").nav.set_active("home", animate=False)
-            self.get_screen("history").nav.set_active("history", animate=False)
+        """Set HOME on startup without assuming the history screen has a nav yet."""
+        if self.has_screen("menu"):
+            self._set_nav("menu", "home")
+        if self.has_screen("history"):
+            self._set_nav("history", "history")
 
     def on_touch_down(self, touch):
         if self.current in ("menu", "history"):
@@ -106,20 +113,17 @@ class SwipeScreenManager(ScreenManager):
         menu, history = self._menu_history()
         menu.x = 0 if target == "menu" else -self.width
         history.x = 0 if target == "history" else self.width
-        if target == "menu":
-            menu.nav.set_active("home", animate=True)
-        else:
-            history.nav.set_active("history", animate=True)
+        self._set_nav(target, "home" if target == "menu" else "history")
 
     def show_home(self):
         if self.current == "menu":
-            self.get_screen("menu").nav.set_active("home", animate=True)
+            self._set_nav("menu", "home")
         else:
             self._finish_drag("menu")
 
     def show_history(self):
         if self.current == "history":
-            self.get_screen("history").nav.set_active("history", animate=True)
+            self._set_nav("history", "history")
         else:
             self._finish_drag("history")
 
