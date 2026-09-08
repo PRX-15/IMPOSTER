@@ -2,8 +2,8 @@ from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.properties import NumericProperty
 from kivy.uix.screenmanager import Screen
-from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.image import Image
 from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
@@ -70,8 +70,8 @@ class TitleBadge(FloatLayout):
 class NavTab(ButtonBehavior, FloatLayout):
     def __init__(self, icon, text, callback, **kwargs):
         super().__init__(**kwargs); self.callback=callback
-        self.icon = Image(source=icon,size_hint=(None,None),size=(dp(34),dp(34)),pos_hint={"center_x":.5,"center_y":.65})
-        self.label = NeonLabel(text=text,font_size="10sp",color=COLORS["muted"],size_hint=(1,None),height=dp(20),pos_hint={"x":0,"y":.035})
+        self.icon = Image(source=icon,size_hint=(None,None),size=(dp(38),dp(38)),pos_hint={"center_x":.5,"center_y":.67})
+        self.label = NeonLabel(text=text,font_size="10sp",bold=True,color=(0.30,0.18,0.42,1),size_hint=(1,None),height=dp(20),pos_hint={"x":0,"y":.015})
         self.add_widget(self.icon); self.add_widget(self.label)
     def on_release(self):
         if self.callback: self.callback()
@@ -83,17 +83,20 @@ class GlassNavBar(BoxLayout):
         super().__init__(orientation="horizontal",spacing=dp(5),padding=[dp(6),dp(6)],size_hint=(None,None),width=dp(190),height=dp(72),**kwargs)
         self.on_home=on_home;self.on_history=on_history;self.active_tab=active
         with self.canvas.before:
-            Color(1,1,1,.46);self.bg=RoundedRectangle(radius=[dp(30)])
+            Color(1,1,1,.46);self.bg=RoundedRectangle(radius=[dp(36)])
             Color(1,1,1,.78);self.border=Line(width=dp(1.1))
-            Color(COLORS["primary"][0],COLORS["primary"][1],COLORS["primary"][2],.34);self.indicator=RoundedRectangle(radius=[dp(30)])
+            Color(COLORS["primary"][0],COLORS["primary"][1],COLORS["primary"][2],.34);self.indicator=RoundedRectangle(radius=[dp(31)])
         self.home_tab=NavTab(asset_path("main-menu","home-icon.png"),"HOME",self._home,size_hint_x=1)
         self.history_tab=NavTab(asset_path("main-menu","history-icon.png"),"HISTORY",self._history,size_hint_x=1)
         self.add_widget(self.home_tab);self.add_widget(self.history_tab)
         self.bind(pos=self._draw,size=self._draw)
         Clock.schedule_once(lambda *_: self._sync_initial_active(),0)
-        Clock.schedule_once(lambda *_: self._sync_initial_active(),.15)
-    def _draw(self,*_):self.bg.pos,self.bg.size=self.pos,self.size;self.border.rounded_rectangle=[self.x,self.y,self.width,self.height,dp(30)];self.indicator.pos=(self.indicator_x,self.y+dp(5));self.indicator.size=(self.width/2-dp(7),self.height-dp(10))
-    def _sync_initial_active(self):self.set_active(self.active_tab,False)
+        Clock.schedule_once(lambda *_: self._sync_initial_active(),.05)
+    def _draw(self,*_):
+        self.bg.pos,self.bg.size=self.pos,self.size;self.border.rounded_rectangle=[self.x,self.y,self.width,self.height,dp(36)];self.indicator.pos=(self.indicator_x,self.y+dp(5));self.indicator.size=(self.width/2-dp(7),self.height-dp(10))
+    def _sync_initial_active(self):
+        self.indicator_x=self.x+dp(6) if self.active_tab=="home" else self.x+self.width/2+dp(1)
+        self._draw()
     def set_active(self,active,animate=True):
         self.active_tab=active;target=self.x+dp(6) if active=="home" else self.x+self.width/2+dp(1)
         if animate:
