@@ -83,29 +83,25 @@ class GlassNavBar(BoxLayout):
         super().__init__(orientation="horizontal",spacing=dp(5),padding=[dp(6),dp(6)],size_hint=(None,None),width=dp(190),height=dp(72),**kwargs)
         self.on_home=on_home;self.on_history=on_history;self.active_tab=active
         with self.canvas.before:
-            # Translucent white glass: background objects remain subtly visible.
             Color(1,1,1,.46);self.bg=RoundedRectangle(radius=[dp(30)])
             Color(1,1,1,.78);self.border=Line(width=dp(1.1))
-            Color(COLORS["primary"][0],COLORS["primary"][1],COLORS["primary"][2],.34);self.indicator=RoundedRectangle(radius=[dp(25)])
+            Color(COLORS["primary"][0],COLORS["primary"][1],COLORS["primary"][2],.34);self.indicator=RoundedRectangle(radius=[dp(30)])
         self.home_tab=NavTab(asset_path("main-menu","home-icon.png"),"HOME",self._home,size_hint_x=1)
         self.history_tab=NavTab(asset_path("main-menu","history-icon.png"),"HISTORY",self._history,size_hint_x=1)
         self.add_widget(self.home_tab);self.add_widget(self.history_tab)
         self.bind(pos=self._draw,size=self._draw)
         Clock.schedule_once(lambda *_: self._sync_initial_active(),0)
         Clock.schedule_once(lambda *_: self._sync_initial_active(),.15)
-    def _draw(self,*_):
-        self.bg.pos,self.bg.size=self.pos,self.size;self.border.rounded_rectangle=[self.x,self.y,self.width,self.height,dp(30)];self.indicator.pos=(self.indicator_x,self.y+dp(5));self.indicator.size=(self.width/2-dp(7),self.height-dp(10))
-    def _sync_initial_active(self): self.set_active(self.active_tab,False)
+    def _draw(self,*_):self.bg.pos,self.bg.size=self.pos,self.size;self.border.rounded_rectangle=[self.x,self.y,self.width,self.height,dp(30)];self.indicator.pos=(self.indicator_x,self.y+dp(5));self.indicator.size=(self.width/2-dp(7),self.height-dp(10))
+    def _sync_initial_active(self):self.set_active(self.active_tab,False)
     def set_active(self,active,animate=True):
-        self.active_tab=active
-        target=self.x+dp(6) if active=="home" else self.x+self.width/2+dp(1)
+        self.active_tab=active;target=self.x+dp(6) if active=="home" else self.x+self.width/2+dp(1)
         if animate:
-            Animation.cancel_all(self,"indicator_x")
-            Animation(indicator_x=target,duration=.28,t="out_cubic").start(self)
+            Animation.cancel_all(self,"indicator_x");Animation(indicator_x=target,duration=.28,t="out_cubic").start(self)
         else:self.indicator_x=target
         self._draw()
-    def _home(self): self.set_active("home");self.on_home()
-    def _history(self): self.set_active("history");self.on_history()
+    def _home(self):self.set_active("home");self.on_home()
+    def _history(self):self.set_active("history");self.on_history()
 
 
 class MainMenuScreen(Screen):
