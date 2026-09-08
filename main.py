@@ -25,9 +25,20 @@ class SwipeScreenManager(ScreenManager):
         self._gesture_touch = None
         self._gesture_start = None
         self._dragging = False
+        self.bind(current=self._sync_nav_for_current)
 
     def _menu_history(self):
         return self.get_screen("menu"), self.get_screen("history")
+
+    def _sync_nav_for_current(self, *_):
+        # Keep the active pill correct even when another screen sets
+        # manager.current directly (for example Results -> Main Menu).
+        if not self.has_screen("menu") or not self.has_screen("history"):
+            return
+        if self.current == "menu":
+            self.get_screen("menu").nav.set_active("home", animate=False)
+        elif self.current == "history":
+            self.get_screen("history").nav.set_active("history", animate=False)
 
     def on_touch_down(self, touch):
         if self.current in ("menu", "history"):
