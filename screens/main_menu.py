@@ -62,7 +62,7 @@ class TitleBadge(FloatLayout):
         with self.canvas.before:
             Color(COLORS["accent"][0],COLORS["accent"][1],COLORS["accent"][2],.12); self.fill=RoundedRectangle(radius=[dp(26)])
             Color(COLORS["accent"][0],COLORS["accent"][1],COLORS["accent"][2],.92); self.border=Line(width=dp(1.7))
-        self.title=NeonLabel(text="IMPOSTER",font_name="GameFont",font_size="40sp",bold=True,size_hint=(None,None));self.add_widget(self.title);self.bind(pos=self._draw,size=self._draw);self._draw()
+        self.title=NeonLabel(text="IMPOSTER",font_name="GameFont",font_size="40sp",bold=True,size_hint=(None,None)); self.add_widget(self.title); self.bind(pos=self._draw,size=self._draw); self._draw()
     def _draw(self,*_):
         self.fill.pos,self.fill.size=self.pos,self.size;self.border.rounded_rectangle=[self.x,self.y,self.width,self.height,dp(26)];self.title.pos,self.title.size=self.pos,self.size;self.title.text_size=self.size
 
@@ -70,8 +70,8 @@ class TitleBadge(FloatLayout):
 class NavTab(ButtonBehavior, FloatLayout):
     def __init__(self, icon, text, callback, **kwargs):
         super().__init__(**kwargs); self.callback=callback
-        self.icon = Image(source=icon,size_hint=(None,None),size=(dp(44),dp(44)),pos_hint={"center_x":.5,"center_y":.67})
-        self.label = NeonLabel(text=text,font_size="10sp",bold=True,color=(0.27,0.18,0.38,1),size_hint=(1,None),height=dp(20),pos_hint={"x":0,"y":.012})
+        self.icon = Image(source=icon,size_hint=(None,None),size=(dp(44),dp(44)),pos_hint={"center_x":.5,"center_y":.68})
+        self.label = NeonLabel(text=text,font_size="10sp",bold=True,color=(0.28,0.19,0.40,1),size_hint=(1,None),height=dp(20),pos_hint={"x":0,"y":.008})
         self.add_widget(self.icon); self.add_widget(self.label)
     def on_release(self):
         if self.callback: self.callback()
@@ -81,32 +81,28 @@ class GlassNavBar(BoxLayout):
     indicator_x=NumericProperty(0)
     def __init__(self,on_home,on_history,active="home",**kwargs):
         super().__init__(orientation="horizontal",spacing=dp(5),padding=[dp(6),dp(6)],size_hint=(None,None),width=dp(190),height=dp(72),**kwargs)
-        self.on_home=on_home;self.on_history=on_history;self.active_tab=active;self._initialised=False
+        self.on_home=on_home;self.on_history=on_history;self.active_tab=active
         with self.canvas.before:
-            Color(1,1,1,.30);self.bg=RoundedRectangle(radius=[dp(40)])
+            Color(1,1,1,.30);self.bg=RoundedRectangle(radius=[dp(36)])
             Color(1,1,1,.72);self.border=Line(width=dp(1.1))
-            Color(COLORS["primary"][0],COLORS["primary"][1],COLORS["primary"][2],.34);self.indicator=RoundedRectangle(radius=[dp(34)])
+            Color(COLORS["primary"][0],COLORS["primary"][1],COLORS["primary"][2],.34);self.indicator=RoundedRectangle(radius=[dp(31)])
         self.home_tab=NavTab(asset_path("main-menu","home-icon.png"),"HOME",self._home,size_hint_x=1)
         self.history_tab=NavTab(asset_path("main-menu","history-icon.png"),"HISTORY",self._history,size_hint_x=1)
         self.add_widget(self.home_tab);self.add_widget(self.history_tab)
         self.bind(pos=self._draw,size=self._draw)
         Clock.schedule_once(lambda *_: self._sync_initial_active(),0)
         Clock.schedule_once(lambda *_: self._sync_initial_active(),.05)
-        Clock.schedule_once(lambda *_: self._sync_initial_active(),.20)
-    def _active_target(self):
-        return self.x+dp(6) if self.active_tab=="home" else self.x+self.width/2+dp(1)
     def _draw(self,*_):
-        self.bg.pos,self.bg.size=self.pos,self.size;self.border.rounded_rectangle=[self.x,self.y,self.width,self.height,dp(40)];self.indicator.pos=(self.indicator_x,self.y+dp(5));self.indicator.size=(self.width/2-dp(7),self.height-dp(10))
-        if not self._initialised:
-            self.indicator_x=self._active_target();self.indicator.pos=(self.indicator_x,self.y+dp(5))
+        self.bg.pos,self.bg.size=self.pos,self.size;self.border.rounded_rectangle=[self.x,self.y,self.width,self.height,dp(36)];self.indicator.pos=(self.indicator_x,self.y+dp(5));self.indicator.size=(self.width/2-dp(7),self.height-dp(10))
     def _sync_initial_active(self):
-        self._initialised=False;self._draw();self._initialised=True
+        self.indicator_x=self.x+dp(6) if self.active_tab=="home" else self.x+self.width/2+dp(1)
+        self._draw()
     def set_active(self,active,animate=True):
-        self.active_tab=active;target=self._active_target()
+        self.active_tab=active;target=self.x+dp(6) if active=="home" else self.x+self.width/2+dp(1)
         if animate:
             Animation.cancel_all(self,"indicator_x");Animation(indicator_x=target,duration=.28,t="out_cubic").start(self)
         else:self.indicator_x=target
-        self._initialised=True;self._draw()
+        self._draw()
     def _home(self):self.set_active("home");self.on_home()
     def _history(self):self.set_active("history");self.on_history()
 
