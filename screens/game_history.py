@@ -55,10 +55,13 @@ class GameHistoryScreen(Screen):
             for game in games:content.add_widget(self._game_card(game))
         scroll.add_widget(content);content_host.add_widget(scroll);self.root.add_widget(content_host);self._add_nav(self.root)
     def _game_card(self,game):
-        card=GlassCard(orientation="vertical",size_hint_y=None,height=dp(112),padding=[dp(16),dp(11)]);names=", ".join(p["name"] for p in game["players"]);names=names if len(names)<=52 else names[:49]+"..."
+        card=GlassCard(orientation="vertical",size_hint_y=None,height=dp(112),padding=[dp(16),dp(11)]);names=", ".join(p["name"] for p in game["players"])
         try:when=datetime.fromisoformat(game["played_at"]).astimezone().strftime("%d %b %Y • %I:%M %p")
         except ValueError:when=game["played_at"]
-        card.add_widget(NeonLabel(text=names,font_size="16sp",bold=True,halign="left",size_hint_y=None,height=dp(28)))
+        # Player names are bold and strictly one line; Kivy shortens with an ellipsis when needed.
+        name_label=NeonLabel(text=names,font_size="16sp",bold=True,halign="left",valign="middle",size_hint_y=None,height=dp(28),shorten=True,shorten_from="right",max_lines=1)
+        name_label.bind(width=lambda inst,w:setattr(inst,"text_size",(w,None)))
+        card.add_widget(name_label)
         card.add_widget(NeonLabel(text=f"{game['rounds']} round{'s' if game['rounds']!=1 else ''}  •  {when}",font_size="12sp",color=COLORS["muted"],halign="left",size_hint_y=None,height=dp(22)))
         btn=RoundedButton(text="VIEW GAME",font_size="12sp",height=dp(38),size_hint_y=None,bg_color=COLORS["card2"],press_feedback=False);btn.bind(on_release=lambda *_:self.show_detail(game["id"]));card.add_widget(btn);return card
     def show_detail(self,game_id):
