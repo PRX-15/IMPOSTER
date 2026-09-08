@@ -86,7 +86,7 @@ class GlassNavBar(BoxLayout):
             Color(1,1,1,.30);self.bg=RoundedRectangle(radius=[dp(36)])
             Color(1,1,1,.72);self.border=Line(width=dp(1.1))
             Color(COLORS["primary"][0],COLORS["primary"][1],COLORS["primary"][2],.34);self.indicator=RoundedRectangle(radius=[dp(31)])
-        self.home_tab=NavTab(asset_path("main-menu","home-icon.png"),"HOME",self._home,icon_size=dp(46),size_hint_x=1)
+        self.home_tab=NavTab(asset_path("main-menu","home-icon.png"),"HOME",self._home,icon_size=dp(34),size_hint_x=1)
         self.history_tab=NavTab(asset_path("main-menu","history-icon.png"),"HISTORY",self._history,icon_size=dp(34),size_hint_x=1)
         self.add_widget(self.home_tab);self.add_widget(self.history_tab)
         self.bind(pos=self._draw,size=self._draw)
